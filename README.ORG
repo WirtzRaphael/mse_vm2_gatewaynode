@@ -1,0 +1,5 @@
+#+TITLE: MSE VM2 Gatewaynode
+:BUFFERSETTINGS:
+#+STARTUP: overview noinlineimages nologstatesreversed ident hidestars hideblocks
+:END:
+
