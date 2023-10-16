@@ -3,3 +3,14 @@
 #+STARTUP: overview noinlineimages nologstatesreversed ident hidestars hideblocks
 :END:
 
+
+*Requirements*
+- InfluxDB
+- InfluxDB Python Libraries
+- Python 3 (3.11 used)
+
+
+```
+python3 -m pip install influxdb
+```
+
