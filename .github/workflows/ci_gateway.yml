@@ -53,7 +53,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: python-distribution-files
-          path: dist/
+          path: gatewaynode/dist/
           retention-days: 1
 
   test:
@@ -76,7 +76,7 @@ jobs:
           python-version: ${{ matrix.python }}
       - name: Retrieve pre-built distribution files
         uses: actions/download-artifact@v3
-        with: {name: python-distribution-files, path: dist/}
+        with: {name: python-distribution-files, path: gatewaynode/dist/}
       - name: Run tests
         run: >-
           pipx run --python '${{ steps.setup-python.outputs.python-path }}'
@@ -112,7 +112,7 @@ jobs:
         with: {python-version: "3.11"}
       - name: Retrieve pre-built distribution files
         uses: actions/download-artifact@v3
-        with: {name: python-distribution-files, path: dist/}
+        with: {name: python-distribution-files, path: gatewaynode/dist/}
       - name: Publish Package
         env:
           # TODO: Set your PYPI_TOKEN as a secret using GitHub UI
