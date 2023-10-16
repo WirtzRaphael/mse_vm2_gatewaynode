@@ -1,5 +1,9 @@
-exclude: '^docs/conf.py'
+exclude: >
+  (?x)^(
+    gatewaynode/docs/conf.py|
+  )$
 
+files: gatewaynode/.*py
 repos:
 - repo: https://github.com/pre-commit/pre-commit-hooks
   rev: v4.5.0
