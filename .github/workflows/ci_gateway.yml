@@ -46,7 +46,7 @@ jobs:
           tox -e clean,build
       - name: Record the path of wheel distribution
         id: wheel-distribution
-        run: echo "path=$(ls dist/*.whl)" >> $GITHUB_OUTPUT
+        run: echo "path=$(ls gatewaynode/dist/*.whl)" >> $GITHUB_OUTPUT
       - name: Store the distribution files for use in other stages
         # `tests` and `publish` will use the same pre-built distributions,
         # so we make sure to release the exact same package that was tested
@@ -83,7 +83,7 @@ jobs:
           tox --installpkg '${{ needs.prepare.outputs.wheel-distribution }}'
           -- -rFEx --durations 10 --color yes  # pytest args
       - name: Generate coverage report
-        run: pipx run coverage lcov -o coverage.lcov
+        run: pipx run coverage lcov -o gatewaynode/coverage.lcov
       - name: Upload partial coverage report
         uses: coverallsapp/github-action@master
         with:
