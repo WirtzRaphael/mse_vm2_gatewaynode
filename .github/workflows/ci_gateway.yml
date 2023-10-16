@@ -17,6 +17,10 @@ on:
     # (useful to check if updates on dependencies break the package)
     - cron: '0 0 1,16 * *'
 
+defaults:
+  run:
+    working-directory: gatewaynode
+
 concurrency:
   group: >-
     ${{ github.workflow }}-${{ github.ref_type }}-
