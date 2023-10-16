@@ -43,10 +43,10 @@ jobs:
       - name: Build package distribution files
         run: >-
           pipx run --python '${{ steps.setup-python.outputs.python-path }}'
-          gateway/tox -e clean,build
+          tox -e clean,build
       - name: Record the path of wheel distribution
         id: wheel-distribution
-        run: echo "path=$(ls gatewaynode/dist/*.whl)" >> $GITHUB_OUTPUT
+        run: echo "path=$(ls dist/*.whl)" >> $GITHUB_OUTPUT
       - name: Store the distribution files for use in other stages
         # `tests` and `publish` will use the same pre-built distributions,
         # so we make sure to release the exact same package that was tested
@@ -80,7 +80,7 @@ jobs:
       - name: Run tests
         run: >-
           pipx run --python '${{ steps.setup-python.outputs.python-path }}'
-          gateway/tox --installpkg '${{ needs.prepare.outputs.wheel-distribution }}'
+          tox --installpkg '${{ needs.prepare.outputs.wheel-distribution }}'
           -- -rFEx --durations 10 --color yes  # pytest args
       - name: Generate coverage report
         run: pipx run coverage lcov -o gatewaynode/coverage.lcov
@@ -121,4 +121,4 @@ jobs:
           TWINE_REPOSITORY: pypi
           TWINE_USERNAME: __token__
           TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
-        run: pipx run gateway/tox -e publish
+        run: pipx run ./gateway/tox -e publish
