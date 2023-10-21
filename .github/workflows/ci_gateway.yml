@@ -19,7 +19,7 @@ on:
 
 defaults:
   run:
-    working-directory: gatewaynode
+    working-directory: examplproject
 
 concurrency:
   group: >-
