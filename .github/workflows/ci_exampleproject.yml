@@ -19,7 +19,7 @@ on:
 
 defaults:
   run:
-    working-directory: examplproject
+    working-directory: exampleproject
 
 concurrency:
   group: >-
