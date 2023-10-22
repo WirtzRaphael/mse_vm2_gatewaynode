@@ -14,3 +14,18 @@
 python3 -m pip install influxdb
 ```
 
+python packages
+- pre-commit
+- pytest-cov
+
+
+Add git hook for pre-commit
+```
+pre-commit install
+```
+
+*Services*
+- https://coveralls.io/repos
+
+*Naming Convention*
+- https://peps.python.org/pep-0008/#function-and-variable-names

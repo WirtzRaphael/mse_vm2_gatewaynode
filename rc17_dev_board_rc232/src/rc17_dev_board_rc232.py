@@ -1,5 +1,7 @@
 import difflib
+import pickle
 import serial
+import time
 import rc232
 import rc_serial
 import rc_measurements
@@ -36,45 +38,62 @@ except serial.SerialException as e:
 ##### SEND
 try:
     print("-- SERIALIZE")
-    sent_data = rc_measurements.get_test_string()
-    sent_serialized = rc232.serialization(dev_board_config_10, sent_data)
+    #sent_data = rc_measurements.get_test_string()
+    send_data_set = rc_measurements.get_test_data_set_send()
+    rc_measurements.write_to_file(send_data_set)
     
     print("-- SEND")
-    serial_10.write(sent_serialized.encode())
+    # todo : rename to packet
+    with open("test_data_serialized.txt", "w") as file:
+        for send_data in send_data_set:
+            send_serialized = rc232.serialization(dev_board_config_10, send_data)
+            #send_serialized = pickle.dumps(send_data)
+            serial_10.write(send_serialized.encode()) # encode string to bytes
+            file.write(send_serialized + "\n")
+            time.sleep(0.01)
 
 except serial.SerialException as e:
     print(f"Serial communication error: {e}")
 
-finally:
-    # Close the serial port when done
-    serial_10.close()
-    
 ##### RECEIVE
 try:
     print("-- READ")
     # Read data from the device
-    # todo : package size
-    received_data = serial_20.read(15)
-    received_data = received_data.decode()
-    print(f"Received data: {received_data}")
-    print("-- DESERIALIZE")
-    received_deserialized = rc232.deserialization(dev_board_config_20, received_data)
-    print("content: ", received_deserialized.content)
-    print("rssi: ", received_deserialized.rssi)
-    # Read data from the device
+    # fix : package size, no magik number
+    # fix : timeout, buffer size limit (fifo)
+    for i in range(0, 99):
+        received_data = serial_20.read(32)
+        received_data = received_data.decode()
+        print(f"Received data: {received_data}")
+        print("---- DESERIALIZE")
+        received_deserialized = rc232.deserialization(dev_board_config_10, received_data)
+        print("id: ", received_deserialized.id)
+        print("timestamp: ", received_deserialized.timestamp)
+        print("content: ", received_deserialized.content)
+        print("rssi: ", received_deserialized.rssi)
 
 except serial.SerialException as e:
     print(f"Serial communication error: {e}")
 
-finally:
-    # Close the serial port when done
+
+try:
+    serial_10.close()
+except serial.SerialException as e:
+    print(f"Serial communication error: {e}")
+
+
+try:
     serial_20.close()
+except serial.SerialException as e:
+    print(f"Serial communication error: {e}")
+
+
 
 ##### COMPARE
-print("-- COMPARE")
-for received_string in received_data:
-    output_list = [li for li in difflib.ndiff(sent_data, received_data) if li[0] != ' ']
-    print(output_list)
-
+#print("-- COMPARE")
+#for received_string in received_data:
+#    output_list = [li for li in difflib.ndiff(sent_data, received_data) if li[0] != ' ']
+#    print(output_list)
+#
 
 print("End of program.")

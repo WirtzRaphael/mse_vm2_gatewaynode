@@ -33,26 +33,42 @@ class RC232Configuration:
         self.data_interface = 0
         self.encryption_flag = 0
         self.decryption_flag = 0
-        
-        
-class RC232Packet:
-    def __init__(self, content, rssi):
+ 
+ 
+class RC232PacketSend:
+    def __init__(self,id, content, timestamp):
+        self.id = id
+        self.timestamp = timestamp
+        self.content = content
+    def __repr__(self):
+        return "{0},{1},{2}".format(self.id, self.timestamp, self.content)
+
+
+class RC232PacketReceive:
+    def __init__(self,id, content, timestamp, rssi):
+        self.id = id
+        self.timestamp = timestamp
         self.content = content
         #self:crc
         self.rssi = rssi
         
- 
+# todo : rename class 
 def serialization(instance, data):
     # todo : packet size
-    return data
+    string = str(data.id) + str(data.timestamp) + str(data.content)
+    return string 
 
 def deserialization(instance, data):
     if (instance.rssi_mode == 1):
-        RC232Packet.content = data[:-1]
-        RC232Packet.rssi = data[-1:]
+        # todo : id (test)
+        # todo : time
+        RC232PacketReceive.id = data[:3]
+        RC232PacketReceive.timestamp = data[3:20]
+        RC232PacketReceive.content = data[-17:-1]
+        RC232PacketReceive.rssi = data[-1:]
     else:
 
-        RC232Packet.content = data
+        RC232PacketReceive.content = data
 
-    return RC232Packet
+    return RC232PacketReceive
 
