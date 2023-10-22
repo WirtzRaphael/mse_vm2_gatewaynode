@@ -34,59 +34,58 @@ try:
 except serial.SerialException as e:
     print(f"Serial communication error: {e}")
   
-
-##### SEND
-try:
+  
+send_packages = rc_measurements.get_test_data_set_send()
+rc_measurements.write_to_file(send_packages, "log/test_data_send.txt")
+ 
+file1 = open("log/test_data_serialized.txt", "a")
+file2 = open("log/test_data_received.txt", "a")
+ 
+for send_package in send_packages: 
+    ##### SEND
     print("-- SERIALIZE")
-    #sent_data = rc_measurements.get_test_string()
-    send_data_set = rc_measurements.get_test_data_set_send()
-    rc_measurements.write_to_file(send_data_set)
-    
+    send_package_serialized = rc232.serialization(dev_board_config_10, send_package)
+    file1.write(send_package_serialized + "\n")
+
     print("-- SEND")
-    # todo : rename to packet
-    with open("test_data_serialized.txt", "w") as file:
-        for send_data in send_data_set:
-            send_serialized = rc232.serialization(dev_board_config_10, send_data)
-            #send_serialized = pickle.dumps(send_data)
-            serial_10.write(send_serialized.encode()) # encode string to bytes
-            file.write(send_serialized + "\n")
-            time.sleep(0.01)
+    try:
+        serial_10.write(send_package_serialized.encode()) # encode string to bytes
+    except serial.SerialException as e:
+        print(f"Serial communication error: {e}")
+  
+    ##### RECEIVE
+    print("-- RECEIVE")
+    try:
+        # fix : package size, no magik number
+        received_package_bin = serial_20.read(32)
+        received_package = received_package_bin.decode()
+        file2.write(received_package + "\n")
+        print(f"Received data: {received_package}")
+    except serial.SerialException as e:
+        print(f"Serial communication error: {e}")
 
-except serial.SerialException as e:
-    print(f"Serial communication error: {e}")
+    print("---- DESERIALIZE")
+    received_package_deserialized = rc232.deserialization(dev_board_config_10, received_package)
+    print("id: ", received_package_deserialized.id)
+    print("timestamp: ", received_package_deserialized.timestamp)
+    print("content: ", received_package_deserialized.content)
+    print("rssi: ", received_package_deserialized.rssi)
+    
+    rc_measurements.append_to_file(received_package_deserialized, "log/test_data_deserialized.txt")
+    
 
-##### RECEIVE
-try:
-    print("-- READ")
-    # Read data from the device
-    # fix : package size, no magik number
-    # fix : timeout, buffer size limit (fifo)
-    for i in range(0, 99):
-        received_data = serial_20.read(32)
-        received_data = received_data.decode()
-        print(f"Received data: {received_data}")
-        print("---- DESERIALIZE")
-        received_deserialized = rc232.deserialization(dev_board_config_10, received_data)
-        print("id: ", received_deserialized.id)
-        print("timestamp: ", received_deserialized.timestamp)
-        print("content: ", received_deserialized.content)
-        print("rssi: ", received_deserialized.rssi)
-
-except serial.SerialException as e:
-    print(f"Serial communication error: {e}")
-
+file1.close()
+file2.close()
 
 try:
     serial_10.close()
 except serial.SerialException as e:
     print(f"Serial communication error: {e}")
 
-
 try:
     serial_20.close()
 except serial.SerialException as e:
     print(f"Serial communication error: {e}")
-
 
 
 ##### COMPARE

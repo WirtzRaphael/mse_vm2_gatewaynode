@@ -11,7 +11,7 @@ def get_test_data_set_send():
     time_now = get_time_utc(datetime.datetime.now())
     sample_rate = 5
     #separator = ';'
-    for i in range(0, 99):
+    for i in range(1, 10):
         value_16bit = bin(random.randrange(65536))[2:].zfill(16)
         packet = rc232.RC232PacketSend(
             id=f"{i:03}",
@@ -36,15 +36,19 @@ def convert_time_utc_to_iso(utc_timestamp):
     iso_timestamp_str = utc_datetime.isoformat()
     return iso_timestamp_str
 
-
-
-
-def write_to_file(rc232_packet_set_send):
-    with open("test_data.txt", "w") as file:
+def write_to_file(rc232_packets, filename):
+    with open(filename, "w") as file:
         separator = ';'
-        for packet in rc232_packet_set_send:
+        for packet in rc232_packets:
             packet_str = f"{packet.id},{packet.timestamp},{packet.content}{separator}\n"
             file.write(packet_str)
+
+def append_to_file(rc232_packet, filename):
+    with open(filename, "a") as file:
+        separator = ';'
+        packet_str = f"{rc232_packet.id},{rc232_packet.timestamp},{rc232_packet.content}{separator}\n"
+        file.write(packet_str)
+
 #
 #def write_to_file(rc232_packet_set_send):
 #    print (rc232_packet_set_send)
