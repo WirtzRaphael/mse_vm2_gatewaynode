@@ -40,6 +40,7 @@ class RC232PacketSend:
         self.id = id
         self.timestamp = timestamp
         self.content = content
+        self.separator = ';'
     def __repr__(self):
         return "{0},{1},{2}".format(self.id, self.timestamp, self.content)
 
@@ -49,13 +50,13 @@ class RC232PacketReceive:
         self.id = id
         self.timestamp = timestamp
         self.content = content
-        #self:crc
         self.rssi = rssi
+        self.separator = ';'
         
 # todo : rename class 
 def serialization(instance, data):
     # todo : packet size
-    string = str(data.id) + str(data.timestamp) + str(data.content)
+    string = str(data.id) + str(data.timestamp) + str(data.content) + str(data.separator)
     return string 
 
 def deserialization(instance, data):
@@ -64,11 +65,17 @@ def deserialization(instance, data):
         # todo : time
         RC232PacketReceive.id = data[:3]
         RC232PacketReceive.timestamp = data[3:20]
-        RC232PacketReceive.content = data[-17:-1]
+        RC232PacketReceive.content = data[21:-1]
         RC232PacketReceive.rssi = data[-1:]
+        #RC232PacketReceive.separator = data[-1:]
     else:
 
         RC232PacketReceive.content = data
 
     return RC232PacketReceive
 
+def print_packet_received(package):
+    print("id: ", package.id)
+    print("timestamp: ", package.timestamp)
+    print("content: ", package.content)
+    print("rssi: ", package.rssi)
