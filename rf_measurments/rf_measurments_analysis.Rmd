@@ -1,0 +1,205 @@
+---
+title: "RF measurements analysis"
+output: html_document
+date: "2023-10-27"
+---
+# Entwicklungsumgebung
+**Libraries**
+```{r}
+#install.packages("bit64")
+```
+
+```{r}
+library(arsenal)
+library(ggplot2)
+library(bit64)
+```
+**Environment**
+```{r}
+rm(list=ls())
+setwd(getwd())
+
+constant <- list()
+```
+**Verweise**
+```{r}
+paths <- list (
+  raw_dataset = "./raw"
+)
+files_dataset <- list (
+  "example"
+)
+```
+# Dataset Measurments
+## Raw
+```{r}
+dataset_path = file.path(paths$raw_data, files_dataset[1])
+dataset_files <- list (
+  send = file.path(dataset_path, "test_data_send.txt"),
+  receive = file.path(dataset_path, "test_data_received.txt")
+)
+dataset_raw <- list (
+  send = read.csv(dataset_files$send, header = FALSE, sep = ",", dec = "."),
+  receive = read.csv(dataset_files$receive, header = FALSE, sep = ",", dec = ".")
+)
+
+colnames(dataset_raw$send) <- c("id", "time", "sensor_1")
+colnames(dataset_raw$receive) <- c("id", "time", "sensor_1", "rssi")
+
+# Check
+is.data.frame(dataset_raw$send)
+is.data.frame(dataset_raw$receive)
+```
+
+*Fix semicolons*
+```{r}
+dataset_raw$send$sensor_1 <- gsub(";", "", dataset_raw$send$sensor_1)
+dataset_raw$receive$sensor_1 <- gsub(";", "", dataset_raw$receive$sensor_1)
+```
+
+*Dataset raw values*
+```{r}
+print(dataset_raw$send)
+print(dataset_raw$receive)
+```
+## Processed
+```{r}
+dataset_processed <- list (
+  send = dataset_raw$send,
+  receive = dataset_raw$receive
+)
+# convert sensor values
+dataset_processed$send$sensor_1d <- strtoi(dataset_raw$send$sensor_1, base = 2)
+dataset_processed$receive$sensor_1d <- strtoi(dataset_raw$receive$sensor_1, base = 2)
+
+colnames(dataset_processed$send) <- c("id", "time", "sensor_1b", "sensor_1d")
+colnames(dataset_processed$receive) <- c("id", "time", "sensor_1b", "rssi", "sensor_1d")
+
+# Check
+is.data.frame(dataset_processed$send)
+is.data.frame(dataset_processed$receive)
+```
+
+*Dataset processed values*
+```{r}
+print(dataset_processed$send)
+print(dataset_processed$receive)
+```
+### Unify
+```{r}
+dataset_processed$send_unified <- dataset_processed$send
+dataset_processed$receive_unified <- dataset_processed$receive
+# names
+dataset_processed$send_unified$set_name <- "send"
+dataset_processed$receive_unified$set_name <- "receive"
+# unify columns 
+dataset_processed$receive_unified$rssi <- NULL
+```
+### merge data frames
+```{r}
+# merge
+dataset_processed$send_rec <- rbind(
+  dataset_processed$receive_unified, 
+  dataset_processed$send_unified
+)
+print(dataset_processed$send_rec)
+#print(dataset_processed$receive_unified)
+#print(dataset_processed$send_unified)
+```
+
+# Compare
+```{r}
+compare <- list()
+```
+
+## send - received
+```{r}
+compare$send_rec <- comparedf(dataset_processed$send_unified, dataset_processed$receive_unified)
+compare$send_rec_summary <- summary(compare$send_rec)
+```
+```{r}
+compare$send_rec_summary$frame.summary
+```
+```{r}
+print("number of packages difference")
+compare$packages_diff = length(dataset_processed$send_unified$id) -
+  length(dataset_processed$receive_unified$id)
+compare$packages_diff
+
+print("sensor values differences")
+compare$sensor_1d_diff = dataset_processed$send_unified$sensor_1d - 
+  dataset_processed$receive_unified$sensor_1d
+compare$sensor_1d_diff 
+```
+
+## Values
+```{r}
+p <- ggplot(dataset_processed$send_rec, aes(time, sensor_1d))
+p + geom_point(aes(shape = factor(set_name)))
+```
+
+```{r}
+#plot(x = dataset_processed$receive$time, y = dataset_processed$receive$sensor_1d)
+p <- ggplot(dataset_processed$receive, aes(time, sensor_1d))
+p + geom_point(aes(colour = factor(id)))
+p <- ggplot(dataset_processed$send, aes(time, sensor_1d))
+p + geom_point()
+```
+
+# RF Quality
+```{r}
+rf_qlty <- list()
+```
+
+
+## TODO Data Throughput
+todo : stress test, send intervals short
+
+## Signal Strength
+```{r}
+p <- ggplot(dataset_processed$receive, aes(time, rssi))
+p + geom_point(aes()) + ggtitle("Signastärke (RSSI Wert)")
+#p + geom_point(aes(colour = factor(id)))
+```
+
+## Packet Reception Ratio
+
+$$
+\text { Packet Delivery Ratio } = \frac{\sum \text { Number of packet receive }}{\sum \text { Number of packet send }}
+$$
+```{r}
+print("packet reception ratio")
+rf_qlty$package_reception_ratio = length(dataset_processed$receive_unified) /
+  length(dataset_processed$send_unified)
+rf_qlty$package_reception_ratio
+```
+
+
+## Compare General
+**Overall**
+```{r}
+compare$send_rec_summary
+```
+
+```{r}
+compare$send_rec_summary$diffs.table
+print(compare$send_rec_summary$frame.summary.table)
+```
+
+
+
+```{r}
+compare$send_rec$vars.summary
+```
+
+
+## more
+- mulitple senders
+  - data collision
+- throughput
+  - coding rate
+  
+### optimiatzation
+- data rate
+- data collision, send algorithm
+
