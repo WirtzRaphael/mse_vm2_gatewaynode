@@ -134,8 +134,37 @@ compare$sensor_1d_diff
 
 ## Values
 ```{r}
-p <- ggplot(dataset_processed$send_rec, aes(time, sensor_1d))
-p + geom_point(aes(shape = factor(set_name)))
+#linecolors <- c("#714C02", "#01587A", "#024E37")
+linecolors <- c("#714C02", "#01587A")
+fillcolors <- c("#9D6C06", "#077DAA")
+
+
+p <- ggplot(dataset_processed$send_rec, aes(time, sensor_1d, 
+    colour = set_name, fill = set_name, shape = set_name, size = set_name)) +
+  geom_point(alpha = 0.5, size = 3) +
+  scale_color_manual(values=linecolors) +
+  scale_size_manual(values = c(5,10)) + # fixme
+  scale_fill_manual(values=fillcolors) +
+  scale_shape_manual(values= c(21, 25))
+p
+```
+```{r}
+#p + geom_point(position=position_jitter(h=0.1, w=0.1), shape = 21, alpha = 0.5, size = 3) +
+p + geom_point(aes(shape = factor(set_name), colour = sensor_1d, fill = sensor_1d),
+  alpha = 0.5, size = 3)
+  scale_color_manual(values=linecolors) +
+  scale_fill_manual(values=fillcolors)
+```
+
+
+```{r}
+# partially transparent points by setting `alpha = 0.5`
+ggplot(mpg, aes(displ, cty, colour = drv, fill = drv)) +
+  geom_point(position=position_jitter(h=0.1, w=0.1),
+             shape = 21, alpha = 0.5, size = 3) +
+  scale_color_manual(values=linecolors) +
+  scale_fill_manual(values=fillcolors) +
+  theme_bw()
 ```
 
 ```{r}
