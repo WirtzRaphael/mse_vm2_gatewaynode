@@ -66,15 +66,27 @@ file_rec.close()
 print("---- DESERIALIZE")
 file_rec = open("log/test_data_received.txt", "r")
 data_rec = file_rec.read()
-packages_rec = data_rec.split(";<") # modules modifies special char 
+packages_rec = data_rec.split(";@")
+#packages_rec = data_rec.split(";<") # modules modifies special char 
 
 file_deser = open("log/test_data_deserialized.txt", "w")
 for package in packages_rec:
     received_package_deserialized = rc232.deserialization(dev_board_config_10, package)
     rc_measurements.append_to_file(received_package_deserialized, "log/test_data_deserialized.txt")
     rc232.print_packet_received(received_package_deserialized)
-
 file_deser.close()
+
+print("---- PROCESS")
+for package in list_packages_deser:
+    separator = ';'
+    with open("log/test_data_processed.txt", "w") as file_proc:
+        timestamp_iso = rc_measurements.convert_time_utc_to_iso(float(package.timestamp))
+        value = int(package.content, 2) # convert binary to int
+        packet_str = f'''{package.id},
+            {package.timestamp_iso},
+            {package.value},
+            {package.rssi}{separator}\n"
+            '''
 
 try:
     serial_10.close()
