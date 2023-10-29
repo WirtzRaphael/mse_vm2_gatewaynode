@@ -61,13 +61,10 @@ def serialization(instance, data):
 
 def deserialization(instance, data):
     if (instance.rssi_mode == 1):
-        # todo : id (test)
-        # todo : time
         RC232PacketReceive.id = data[:3]
         RC232PacketReceive.timestamp = data[3:20]
         RC232PacketReceive.content = data[21:-1]
         RC232PacketReceive.rssi = data[-1:]
-        #RC232PacketReceive.separator = data[-1:]
     else:
 
         RC232PacketReceive.content = data

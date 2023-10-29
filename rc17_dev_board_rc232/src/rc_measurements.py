@@ -20,6 +20,7 @@ def get_test_data_set_send():
         testset.append(packet)
     return testset
 
+# todo : move util file
 def get_time_utc(datetime):
     utc_time = datetime.replace(tzinfo=timezone.utc) 
     utc_timestamp = utc_time.timestamp()

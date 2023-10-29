@@ -1,5 +1,4 @@
 import serial
-
 # serial port
 # eg linux '/dev/ttyUSB0'
 # eg windows 'COM3'
