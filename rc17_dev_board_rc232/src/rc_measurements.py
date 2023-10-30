@@ -9,8 +9,8 @@ def get_test_string():
 def get_test_data_set_send():
     testset = []
     time_now = get_time_utc(datetime.datetime.now())
-    sample_rate = 5
-    for i in range(1, 5):
+    sample_rate = 1
+    for i in range(1, 12):
         value_16bit = bin(random.randrange(65536))[2:].zfill(16)
         packet = rc232.RC232PacketSend(
             id=f"{i:03}",
