@@ -1,5 +1,3 @@
-import difflib
-import pickle
 import serial
 import time
 import measurments.testdata
