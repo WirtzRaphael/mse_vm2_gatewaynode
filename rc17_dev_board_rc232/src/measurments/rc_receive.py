@@ -6,7 +6,7 @@ import rc232.rc_serial
 
 def rc_receive(serial_object, rc232_config):
     file_rec = open("log/test_data_received.txt", "w")
-    counter = 0
+    counter = 1
 
     while(counter < 11):
         ##### RECEIVE
@@ -20,8 +20,8 @@ def rc_receive(serial_object, rc232_config):
         except serial.SerialException as e:
             print(f"Serial communication error: {e}")
         #time.sleep(0.1)
-        counter = counter + 1
         print("counter", counter)
+        counter = counter + 1
 
     file_rec.close()
 

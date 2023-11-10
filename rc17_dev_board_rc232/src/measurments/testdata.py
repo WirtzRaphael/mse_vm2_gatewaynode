@@ -9,7 +9,7 @@ def get_test_data_set_send():
     testset = []
     time_now = timeutil.timeutil.get_time_utc()
     sample_rate = 1
-    for i in range(1, 12):
+    for i in range(1, 11):
         value_16bit = bin(random.randrange(65536))[2:].zfill(16)
         packet = rc232.rc232.RC232PacketSendTesting(
             id=f"{i:03}",
