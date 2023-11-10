@@ -1,8 +1,8 @@
 import serial
 import time
-import rc232
-import rc_serial
-import rc_measurements
+import measurments.testdata
+import rc232.rc232
+import rc232.rc_serial
 
 def rc_receive():
     #serial_port = 'COM3'
