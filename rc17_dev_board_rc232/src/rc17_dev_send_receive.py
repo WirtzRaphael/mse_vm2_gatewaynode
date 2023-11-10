@@ -37,7 +37,7 @@ def rc_send_receive():
     for send_package in send_packages: 
         ##### SEND
         print("-- SERIALIZE")
-        send_package_serialized = rc232.serialization(dev_board_config_10, send_package)
+        send_package_serialized = rc232.serializationTesting(dev_board_config_10, send_package)
         file_ser.write(send_package_serialized + "\n")
 
         print("-- SEND")
@@ -69,7 +69,7 @@ def rc_send_receive():
 
     file_deser = open("log/test_data_deserialized.txt", "w")
     for package in packages_rec:
-        received_package_deserialized = rc232.deserialization(dev_board_config_10, package)
+        received_package_deserialized = rc232.deserializationTesting(dev_board_config_10, package)
         rc_measurements.append_to_file(received_package_deserialized, "log/test_data_deserialized.txt")
         rc232.print_packet_received(received_package_deserialized)
     file_deser.close()

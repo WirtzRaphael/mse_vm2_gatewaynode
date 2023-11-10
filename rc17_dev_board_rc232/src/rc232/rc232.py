@@ -35,7 +35,7 @@ class RC232Configuration:
         self.decryption_flag = 0
  
  
-class RC232PacketSend:
+class RC232PacketSendTesting:
     def __init__(self,id, content, timestamp):
         self.id = id
         self.timestamp = timestamp
@@ -45,7 +45,7 @@ class RC232PacketSend:
         return "{0},{1},{2}".format(self.id, self.timestamp, self.content)
 
 
-class RC232PacketReceive:
+class RC232PacketReceiveTesting:
     def __init__(self,id, content, timestamp, rssi):
         self.id = id
         self.timestamp = timestamp
@@ -54,22 +54,22 @@ class RC232PacketReceive:
         self.separator = ';'
         
 # todo : rename class 
-def serialization(instance, data):
+def serializationTesting(instance, data):
     # todo : packet size
     string = str(data.id) + str(data.timestamp) + str(data.content) + str(data.separator)
     return string 
 
-def deserialization(instance, data):
+def deserializationTesting(instance, data):
     if (instance.rssi_mode == 1):
-        RC232PacketReceive.id = data[:3]
-        RC232PacketReceive.timestamp = data[3:20]
-        RC232PacketReceive.content = data[21:-1]
-        RC232PacketReceive.rssi = data[-1:]
+        RC232PacketReceiveTesting.id = data[:3]
+        RC232PacketReceiveTesting.timestamp = data[3:20]
+        RC232PacketReceiveTesting.content = data[21:-1]
+        RC232PacketReceiveTesting.rssi = data[-1:]
     else:
 
-        RC232PacketReceive.content = data
+        RC232PacketReceiveTesting.content = data
 
-    return RC232PacketReceive
+    return RC232PacketReceiveTesting
 
 def print_packet_received(package):
     print("id: ", package.id)

@@ -5,8 +5,8 @@ import rc232.rc_serial
 import measurments.rc_receive
 import measurments.rc_send
 
-#action = "send"
-action = "receive"
+action = "send"
+#action = "receive"
 serial_port = '/dev/ttyUSB0'
 #serial_port = '/dev/ttyUSB1'
 
