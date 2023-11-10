@@ -12,7 +12,7 @@ def main(host="localhost", port=8086):
     user = "my-user"
     # password = 'root'
     password = "my-password"
-    dbname = "example"
+    dbname = "my-bucket-new"
     dbuser = "my-user"
     dbuser_password = "my-password"
     query = "select Float_value from cpu_load_short;"
@@ -35,10 +35,10 @@ def main(host="localhost", port=8086):
     client = InfluxDBClient(host, port, user, password, dbname)
 
     print("Create database: " + dbname)
-    client.create_database(dbname)
+    #client.create_database(dbname)
 
     print("Create a retention policy")
-    client.create_retention_policy("awesome_policy", "3d", 3, default=True)
+    #client.create_retention_policy("awesome_policy", "3d", 3, default=True)
 
     print("Switch user: " + dbuser)
     client.switch_user(dbuser, dbuser_password)
