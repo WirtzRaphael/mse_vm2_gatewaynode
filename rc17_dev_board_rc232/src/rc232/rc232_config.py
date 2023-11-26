@@ -1,5 +1,6 @@
 import rc232.rc232
 import serial
+import time
 
 # independent settins
 baud_rate = 5
@@ -154,5 +155,152 @@ class RC232Configuration:
 def rc232_config_init(serial_object: serial.Serial, rc232_config):
     return
 
+#
+#             | Idle | <-------------------------------+
+#                 |                                    |
+#        | Pull CONFIG pin low |                       |
+#                 |                                    |
+#        | Wait for '>' on TXD |                       |
+#                 |                                    |
+#   +--> | Send command byte to RXD |                  |
+#   |             |                                    |
+#   |    | Wait for '>' on TXD |                       |
+#   |             |                                    |
+#   |    | Send command parameters to RXD |            |
+#   |             |                                    |
+#   |    | Wait for '>' on TXD |                       |
+#   |             |                                    |
+#   +--- Yes <- New command ? -> No -> Send X to RXD --+
+#
+def rc232_set_config(serial_object: serial.Serial, rc232_config, permanent):
+    __exit_config_mode(serial_object)
+    # wait : pull CONFIG pin low
+    if not(__wait_module_response_prompt_blocking(serial_object)):
+        return
+    # send command
+    __send_command(serial_object, "P")
+    # wait : resonse
+    if not(__wait_module_response_prompt_blocking(serial_object)):
+        return
+    __send_command_parameters(serial_object, 1)
+    # wait : resonse
+    if not(__wait_module_response_prompt_blocking(serial_object)):
+        return
+    print("config set finished")
+    return
 
+# permanent memory
+def rc232_set_memory_config(serial_object: serial.Serial, rc232_config, dryrun:bool):
+    # escape
+    __exit_config_mode(serial_object)
+    # wait : pull CONFIG pin low
+    if not(__wait_module_response_prompt_blocking(serial_object, dryrun)):return
+    __send_command(serial_object, "M", dryrun=dryrun)
+    # wait : resonse
+    if not(__wait_module_response_prompt_blocking(serial_object, dryrun)):return
+    # send as binary values
+    #__send_command_address(serial_object, "01", dryrun)
+    __send_command_address(serial_object, 0x01, dryrun)
+    # wait : resonse
+    if not(__wait_module_response_prompt_blocking(serial_object, dryrun)):return
+    # todo send parameters
+    #
+    print("config set memory finished")
+    return
 
+def read_temperature(serial_object: serial.Serial, dryrun:bool):
+    __exit_config_mode(serial_object)
+    __wait_module_response_prompt_blocking(serial_object, dryrun)
+    __send_command(serial_object, "U", dryrun)
+    module_response = __wait_module_response_value_blocking(serial_object, dryrun)
+    if b'>' in module_response:
+        #print("The character '>' is present in the binary data.")
+        cleaned_response = module_response.replace(b'>', b'')
+        #print(cleaned_response)
+        cleaned_response_int = int.from_bytes(cleaned_response, byteorder='big')
+        return (cleaned_response_int - 128)
+    return '0'
+
+""" 
+def read_memory_one_byte(serial_object: serial.Serial, dryrun:bool):
+    __exit_config_mode(serial_object)
+    __wait_module_response_prompt_blocking(serial_object, dryrun)
+    __send_command(serial_object, "Y", dryrun=dryrun)
+    __wait_module_response_prompt_blocking(serial_object, dryrun)
+    __send_command_parameters(serial_object, 0x01, dryrun=dryrun)
+    module_response = __wait_module_response_value_blocking(serial_object, dryrun=False)
+    if (module_response == '0'):return
+    return 
+"""
+
+def rc232_reset_module():
+    # todo : implement
+    return
+
+def rc232_voltage():
+    # todo : implement
+    # see V command
+    return
+
+def __wait_module_response(serial_object: serial.Serial, decode:bool):
+    print("wait for module response")
+    timeout = 20
+    timeout_start = time.time()
+    while time.time() < timeout_start + timeout:
+        if (serial_object.in_waiting > 0):
+            if(decode == True):
+                serial_val = serial_object.read(serial_object.in_waiting).decode()
+            else:
+                serial_val = serial_object.read(serial_object.in_waiting)
+            #print("READ: ", serial_val)
+            return serial_val
+    return 'timeout'
+
+def __wait_module_response_value_blocking(serial_object: serial.Serial, dryrun:bool):
+    if(dryrun == True):
+        print("dryrun: skip module response value")
+        return '0'
+    module_response = __wait_module_response(serial_object, decode=False)
+    return module_response
+
+# wait for '>' on TXD
+def __wait_module_response_prompt_blocking(serial_object: serial.Serial, dryrun:bool):
+    if(dryrun == True):
+        print("dryrun: skip module response check")
+        return True
+    module_response = __wait_module_response(serial_object, decode=True)
+    if (module_response == '>'):
+        print("module reponding")
+        return True
+    return False
+
+def __send_command(serial_object: serial.Serial, command, dryrun:bool):
+    command_encode = command.encode()
+    if(dryrun == True):
+        print("dryrun: ", command_encode)
+        return
+    print("send command: ", command_encode)
+    serial_object.write(command_encode)
+    return
+
+def __send_command_parameters(serial_object: serial.Serial, parameters:int, dryrun:bool):
+    if(dryrun == True):
+        print("dryrun: ", parameters)
+        return
+    print("send parameters: ", parameters)
+    serial_object.write(parameters) # no encoding for int
+    return
+
+def __send_command_address(serial_object: serial.Serial, address_hex:hex, dryrun:bool):
+    #binary_string = binascii.unhexlify(address_hex_string)
+    binary_data = address_hex.to_bytes(1, byteorder='big') # 1 byte
+    if(dryrun == True):
+        print("dryrun: ", binary_data)
+        return
+    print("send binary string: ", binary_data)
+    serial_object.write(binary_data)
+    return
+
+def __exit_config_mode(serial_object: serial.Serial):
+    serial_object.write('X'.encode())
+    return
