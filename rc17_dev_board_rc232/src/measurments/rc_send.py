@@ -19,10 +19,12 @@ def rc_send(serial_object, rc232_config):
         print("-- SERIALIZE")
         send_package_serialized = rc232.rc232.serializationTesting(rc232_config, send_package)
         file_ser.write(send_package_serialized + "\n")
+        print(send_package_serialized)
 
         print("-- SEND")
+        print(f"Send data: {send_package}")
         try:
-            time.sleep(5)
+            time.sleep(2)
             serial_object.write(send_package_serialized.encode()) # encode string to bytes
         except serial.SerialException as e:
             print(f"Serial communication error: {e}")
