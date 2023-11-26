@@ -26,6 +26,7 @@ except serial.SerialException as e:
 
 
 temperature_1 = rc232.rc232_config.read_temperature(serial_10, dryrun=False)
+voltage = rc232.rc232_config.read_voltage(serial_10, dryrun=False)
 temperature_2 = rc232.rc232_config.read_temperature(serial_10, dryrun=False)
 #rc232.rc232_config.rc232_set_config(serial_10, dev_board_config_10, permanent=True)
 

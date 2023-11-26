@@ -175,11 +175,8 @@ def rc232_config_init(serial_object: serial.Serial, rc232_config):
 def rc232_set_config(serial_object: serial.Serial, rc232_config, permanent):
     __exit_config_mode(serial_object)
     # wait : pull CONFIG pin low
-    if not(__wait_module_response_prompt_blocking(serial_object)):
-        return
-    # send command
+    __wait_module_response_prompt_blocking(serial_object)
     __send_command(serial_object, "P")
-    # wait : resonse
     if not(__wait_module_response_prompt_blocking(serial_object)):
         return
     __send_command_parameters(serial_object, 1)
@@ -196,10 +193,7 @@ def rc232_set_memory_config(serial_object: serial.Serial, rc232_config, dryrun:b
     # wait : pull CONFIG pin low
     if not(__wait_module_response_prompt_blocking(serial_object, dryrun)):return
     __send_command(serial_object, "M", dryrun=dryrun)
-    # wait : resonse
     if not(__wait_module_response_prompt_blocking(serial_object, dryrun)):return
-    # send as binary values
-    #__send_command_address(serial_object, "01", dryrun)
     __send_command_address(serial_object, 0x01, dryrun)
     # wait : resonse
     if not(__wait_module_response_prompt_blocking(serial_object, dryrun)):return
@@ -209,19 +203,23 @@ def rc232_set_memory_config(serial_object: serial.Serial, rc232_config, dryrun:b
     return
 
 def read_temperature(serial_object: serial.Serial, dryrun:bool):
-    __exit_config_mode(serial_object)
-    __wait_module_response_prompt_blocking(serial_object, dryrun)
-    __send_command(serial_object, "U", dryrun)
-    module_response = __wait_module_response_value_blocking(serial_object, dryrun)
+    try:
+        __exit_config_mode(serial_object)
+        __wait_module_response_prompt_blocking(serial_object, dryrun)
+        __send_command(serial_object, "U", dryrun)
+        module_response = __wait_module_response_value_blocking(serial_object, dryrun)
+    except TimeoutError as err:
+        return
     if b'>' in module_response:
         #print("The character '>' is present in the binary data.")
         cleaned_response = module_response.replace(b'>', b'')
         #print(cleaned_response)
         cleaned_response_int = int.from_bytes(cleaned_response, byteorder='big')
         return (cleaned_response_int - 128)
-    return '0'
+    return
 
 """ 
+# todo : implement
 def read_memory_one_byte(serial_object: serial.Serial, dryrun:bool):
     __exit_config_mode(serial_object)
     __wait_module_response_prompt_blocking(serial_object, dryrun)
@@ -237,14 +235,25 @@ def rc232_reset_module():
     # todo : implement
     return
 
-def rc232_voltage():
-    # todo : implement
-    # see V command
+def read_voltage(serial_object: serial.Serial, dryrun:bool=False):
+    try:
+        __exit_config_mode(serial_object)
+        __wait_module_response_prompt_blocking(serial_object, dryrun)
+        __send_command(serial_object, "V", dryrun)
+        module_response = __wait_module_response_value_blocking(serial_object, dryrun)
+    except TimeoutError as err:
+        return
+    if b'>' in module_response:
+        #print("The character '>' is present in the binary data.")
+        cleaned_response = module_response.replace(b'>', b'')
+        #print(cleaned_response)
+        cleaned_response_int = int.from_bytes(cleaned_response, byteorder='big')
+        return (cleaned_response_int * 0.03)
     return
 
-def __wait_module_response(serial_object: serial.Serial, decode:bool):
+def __wait_module_response_blocking(serial_object: serial.Serial, decode:bool):
     print("wait for module response")
-    timeout = 20
+    timeout = 5
     timeout_start = time.time()
     while time.time() < timeout_start + timeout:
         if (serial_object.in_waiting > 0):
@@ -254,25 +263,31 @@ def __wait_module_response(serial_object: serial.Serial, decode:bool):
                 serial_val = serial_object.read(serial_object.in_waiting)
             #print("READ: ", serial_val)
             return serial_val
-    return 'timeout'
+    raise TimeoutError("module not responding")
 
 def __wait_module_response_value_blocking(serial_object: serial.Serial, dryrun:bool):
     if(dryrun == True):
         print("dryrun: skip module response value")
         return '0'
-    module_response = __wait_module_response(serial_object, decode=False)
-    return module_response
+    try:
+        module_response = __wait_module_response_blocking(serial_object, decode=False)
+        return module_response
+    except TimeoutError as err:
+        print("TimeoutError: ", err)
+        raise
 
 # wait for '>' on TXD
 def __wait_module_response_prompt_blocking(serial_object: serial.Serial, dryrun:bool):
     if(dryrun == True):
         print("dryrun: skip module response check")
-        return True
-    module_response = __wait_module_response(serial_object, decode=True)
-    if (module_response == '>'):
-        print("module reponding")
-        return True
-    return False
+        return
+    try:
+        module_response = __wait_module_response_blocking(serial_object, decode=True)
+        if (module_response == '>'):
+            print("module reponding")
+    except TimeoutError as err:
+        print("TimeoutError: ", err)
+        raise
 
 def __send_command(serial_object: serial.Serial, command, dryrun:bool):
     command_encode = command.encode()
