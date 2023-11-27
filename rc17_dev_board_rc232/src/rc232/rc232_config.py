@@ -155,6 +155,7 @@ class RC232Configuration:
 def rc232_config_init(serial_object: serial.Serial, rc232_config):
     return
 
+# ==== FLOW DIAGRAM ====
 #
 #             | Idle | <-------------------------------+
 #                 |                                    |
@@ -172,41 +173,58 @@ def rc232_config_init(serial_object: serial.Serial, rc232_config):
 #   |             |                                    |
 #   +--- Yes <- New command ? -> No -> Send X to RXD --+
 #
-def rc232_set_config(serial_object: serial.Serial, rc232_config, permanent):
-    __exit_config_mode(serial_object)
-    # wait : pull CONFIG pin low
-    __wait_module_response_prompt_blocking(serial_object)
-    __send_command(serial_object, "P")
-    if not(__wait_module_response_prompt_blocking(serial_object)):
+# ===== MEMORY =====
+# - volatile configuration memory (RAM)
+# - non volatile configuration memory (Flash)
+
+# todo : reduce arguments
+def config_cmd(serial_object: serial.Serial, cmd, dryrun:bool, cmd_type="char", argument=None, arg_type="int", return_value=False):
+    try:
+        __exit_config_mode(serial_object)
+        # wait : pull CONFIG pin low
+        __wait_module_response_prompt_blocking(serial_object, dryrun)
+        if cmd_type == "hex":
+            __send_command_data_hex(serial_object, cmd, dryrun)
+        else:
+            __send_command_data_char(serial_object, cmd, dryrun)
+
+        if argument is not None:
+            __wait_module_response_prompt_blocking(serial_object, dryrun)
+            if arg_type == "hex":
+                __send_command_data_hex(serial_object, argument, dryrun)
+            else:
+                __send_command_data_int(serial_object, argument, dryrun)
+            __wait_module_response_prompt_blocking(serial_object, dryrun)
+
+        if return_value == True:
+            module_response = __wait_module_response_value_blocking(serial_object, dryrun)
+            return module_response
+
+    except TimeoutError as err:
         return
-    __send_command_parameters(serial_object, 1)
-    # wait : resonse
-    if not(__wait_module_response_prompt_blocking(serial_object)):
+    except serial.SerialException as e:
         return
-    print("config set finished")
     return
 
-# permanent memory
-def rc232_set_memory_config(serial_object: serial.Serial, rc232_config, dryrun:bool):
-    # escape
-    __exit_config_mode(serial_object)
-    # wait : pull CONFIG pin low
-    if not(__wait_module_response_prompt_blocking(serial_object, dryrun)):return
-    __send_command(serial_object, "M", dryrun=dryrun)
-    if not(__wait_module_response_prompt_blocking(serial_object, dryrun)):return
-    __send_command_address(serial_object, 0x01, dryrun)
-    # wait : resonse
-    if not(__wait_module_response_prompt_blocking(serial_object, dryrun)):return
-    # todo send parameters
-    #
+# fixme : not working
+def config_non_volatile(serial_object: serial.Serial, dryrun:bool):
+    config_cmd(serial_object, "M", argument=None, dryrun=dryrun)
+    # adress
+    # todo: replace example
+    __send_command_data_hex(serial_object, 0x01, dryrun)
+    __send_command_data_int(serial_object, 1, dryrun)
+    # exit
+    __send_command_data_hex(serial_object, 0xFF, dryrun)
+    __wait_module_response_prompt_blocking(serial_object, dryrun)
     print("config set memory finished")
     return
 
 def read_temperature(serial_object: serial.Serial, dryrun:bool):
     try:
+        # todo replace with config cmd
         __exit_config_mode(serial_object)
         __wait_module_response_prompt_blocking(serial_object, dryrun)
-        __send_command(serial_object, "U", dryrun)
+        __send_command_data_char(serial_object, "U", dryrun)
         module_response = __wait_module_response_value_blocking(serial_object, dryrun)
     except TimeoutError as err:
         return
@@ -218,18 +236,21 @@ def read_temperature(serial_object: serial.Serial, dryrun:bool):
         return (cleaned_response_int - 128)
     return
 
-""" 
-# todo : implement
+# todo: check if working
+def set_rf_power(serial: serial.Serial, power:int):
+    print("set rf power to: ", power)
+    if (power < 1 or power > 5):
+        print("error: power out of range")
+        return
+    config_cmd(serial, "P", argument=power, dryrun=False)
+    return
+
+# fixme: not example
 def read_memory_one_byte(serial_object: serial.Serial, dryrun:bool):
-    __exit_config_mode(serial_object)
-    __wait_module_response_prompt_blocking(serial_object, dryrun)
-    __send_command(serial_object, "Y", dryrun=dryrun)
-    __wait_module_response_prompt_blocking(serial_object, dryrun)
-    __send_command_parameters(serial_object, 0x01, dryrun=dryrun)
-    module_response = __wait_module_response_value_blocking(serial_object, dryrun=False)
-    if (module_response == '0'):return
+    address = 0x01
+    module_response = config_cmd(serial_object, "Y", argument=address, arg_type="hex", return_value=True, dryrun=dryrun)
+    print("address", address, "; value: ", module_response)
     return 
-"""
 
 def rc232_reset_module():
     # todo : implement
@@ -237,23 +258,21 @@ def rc232_reset_module():
 
 def read_voltage(serial_object: serial.Serial, dryrun:bool=False):
     try:
-        __exit_config_mode(serial_object)
-        __wait_module_response_prompt_blocking(serial_object, dryrun)
-        __send_command(serial_object, "V", dryrun)
-        module_response = __wait_module_response_value_blocking(serial_object, dryrun)
+        #module_response = config_cmd(serial_object, cmd_str="V", dryrun=dryrun, argument=None, return_value=True)
+        module_response = config_cmd(serial_object, cmd=0x56, cmd_type="hex", dryrun=dryrun, argument=None, return_value=True)
+        if module_response is not None and b'>' in module_response:
+            #print("The character '>' is present in the binary data.")
+            cleaned_response = module_response.replace(b'>', b'')
+            #print(cleaned_response)
+            cleaned_response_int = int.from_bytes(cleaned_response, byteorder='big')
+            return (cleaned_response_int * 0.03)
     except TimeoutError as err:
         return
-    if b'>' in module_response:
-        #print("The character '>' is present in the binary data.")
-        cleaned_response = module_response.replace(b'>', b'')
-        #print(cleaned_response)
-        cleaned_response_int = int.from_bytes(cleaned_response, byteorder='big')
-        return (cleaned_response_int * 0.03)
     return
 
 def __wait_module_response_blocking(serial_object: serial.Serial, decode:bool):
     print("wait for module response")
-    timeout = 5
+    timeout = 10
     timeout_start = time.time()
     while time.time() < timeout_start + timeout:
         if (serial_object.in_waiting > 0):
@@ -268,7 +287,7 @@ def __wait_module_response_blocking(serial_object: serial.Serial, decode:bool):
 def __wait_module_response_value_blocking(serial_object: serial.Serial, dryrun:bool):
     if(dryrun == True):
         print("dryrun: skip module response value")
-        return '0'
+        return
     try:
         module_response = __wait_module_response_blocking(serial_object, decode=False)
         return module_response
@@ -289,30 +308,29 @@ def __wait_module_response_prompt_blocking(serial_object: serial.Serial, dryrun:
         print("TimeoutError: ", err)
         raise
 
-def __send_command(serial_object: serial.Serial, command, dryrun:bool):
+def __send_command_data_char(serial_object: serial.Serial, command, dryrun:bool):
     command_encode = command.encode()
     if(dryrun == True):
         print("dryrun: ", command_encode)
         return
-    print("send command: ", command_encode)
+    print("send data char: ", command_encode)
     serial_object.write(command_encode)
     return
 
-def __send_command_parameters(serial_object: serial.Serial, parameters:int, dryrun:bool):
+def __send_command_data_int(serial_object: serial.Serial, data_int:int, dryrun:bool):
     if(dryrun == True):
-        print("dryrun: ", parameters)
+        print("dryrun: ", data_int)
         return
-    print("send parameters: ", parameters)
-    serial_object.write(parameters) # no encoding for int
+    print("send data: ", data_int)
+    serial_object.write(data_int) # no encoding for int
     return
 
-def __send_command_address(serial_object: serial.Serial, address_hex:hex, dryrun:bool):
-    #binary_string = binascii.unhexlify(address_hex_string)
+def __send_command_data_hex(serial_object: serial.Serial, address_hex:hex, dryrun:bool):
     binary_data = address_hex.to_bytes(1, byteorder='big') # 1 byte
     if(dryrun == True):
         print("dryrun: ", binary_data)
         return
-    print("send binary string: ", binary_data)
+    print("send data binary string: ", binary_data)
     serial_object.write(binary_data)
     return
 
