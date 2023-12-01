@@ -177,11 +177,11 @@ def rc232_config_init(serial_object: serial.Serial, rc232_config):
 # - volatile configuration memory (RAM)
 # - non volatile configuration memory (Flash)
 
-# todo : reduce arguments
+# todo : reduce arguments, refactor
 def config_cmd(serial_object: serial.Serial, cmd, dryrun:bool, cmd_type="char", argument=None, arg_type="int", return_value=False):
     try:
         __exit_config_mode(serial_object)
-        # wait : pull CONFIG pin low
+        # fixme: separate function config pin low
         __wait_module_response_prompt_blocking(serial_object, dryrun)
         if cmd_type == "hex":
             __send_command_data_hex(serial_object, cmd, dryrun)
@@ -192,8 +192,10 @@ def config_cmd(serial_object: serial.Serial, cmd, dryrun:bool, cmd_type="char", 
             __wait_module_response_prompt_blocking(serial_object, dryrun)
             if arg_type == "hex":
                 __send_command_data_hex(serial_object, argument, dryrun)
-            else:
+            elif arg_type == "int":
                 __send_command_data_int(serial_object, argument, dryrun)
+            else:
+                __send_command_data_char(serial_object, argument, dryrun)
             __wait_module_response_prompt_blocking(serial_object, dryrun)
 
         if return_value == True:
@@ -242,17 +244,48 @@ def set_rf_power(serial: serial.Serial, power:int):
     if (power < 1 or power > 5):
         print("error: power out of range")
         return
-    config_cmd(serial, "P", argument=power, dryrun=False)
+    # fixme : hardcoded
+    config_cmd(serial, "P", argument='1', arg_type="char", dryrun=False)
     return
 
-# fixme: not example
-def read_memory_one_byte(serial_object: serial.Serial, dryrun:bool):
-    address = 0x01
-    module_response = config_cmd(serial_object, "Y", argument=address, arg_type="hex", return_value=True, dryrun=dryrun)
-    print("address", address, "; value: ", module_response)
-    return 
+def set_rf_channel(serial: serial.Serial, channel:int):
+    return
 
-def rc232_reset_module():
+def set_destination_address(serial: serial.Serial, address:int):
+    return
+
+def read_memory_one_byte(serial_object: serial.Serial, address:hex , dryrun:bool):
+    #address = 0x01
+    try:
+        __exit_config_mode(serial_object)
+        __wait_module_response_prompt_blocking(serial_object, dryrun)
+        __send_command_data_char(serial_object, "Y", dryrun)
+        __wait_module_response_prompt_blocking(serial_object, dryrun)
+        __send_command_data_hex(serial_object, address, dryrun)
+        module_response = __wait_module_response_value_blocking(serial_object, dryrun)
+    except TimeoutError as err:
+        return
+    print("address", address, "; value: ", module_response)
+    return module_response
+
+def reset_module():
+    # todo : implement
+    # - ascii "@'RR'" and assert config pin
+    return
+
+# require : config pin low
+# release : config pin high
+def sleep_mode_module():
+    try:
+        __exit_config_mode(serial_object)
+        __wait_module_response_prompt_blocking(serial_object, dryrun)
+        __send_command_data_char(serial_object, "Z", dryrun)
+    except TimeoutError as err:
+        return
+    return
+
+
+def read_signal_strength(serial_object: serial.Serial, dryrun:bool):
     # todo : implement
     return
 
