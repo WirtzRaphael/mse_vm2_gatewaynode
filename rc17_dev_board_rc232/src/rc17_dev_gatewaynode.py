@@ -5,24 +5,59 @@ import rc232.rc232_config
 import rc232.rc232_serial
 import rc232.rc232_radio
 import measurments.rc_send
+import timeutil.timer
+import timeutil.timeutil
+import threading 
+import schedule 
+from schedule import every, repeat
 
+""" Variables
+"""
 serial_port = '/dev/ttyUSB0'
 baud_rate = 19200 
 timeout = 1
 
 
-# Initialization
+""" Functions
+"""
+@repeat(every(20).seconds, message = "write")
+@repeat(every(100).seconds, message = "check")
+def database_operation(message):
+    print("Database: ", message, "\n")
+    # implement
+    return
+
+def time_sync():
+    print("time_sync \n")
+    # implement
+    return
+
+def radio_read(serial_object: serial.Serial):
+    print("thread_sensor")
+    rc232.rc232_radio.radio_receive(serial_object)
+    return
+
+
+""" Initialzation
+"""
 dev_board_serial_20 = rc232.rc232_serial.SerialRcDevBoard(serial_port, baud_rate, timeout)
 dev_board_config_20 = rc232.rc232_config.RC232Configuration(channel=1, destination_id=20, power=0, rssi_mode=1, unique_id=10)
 serial_20 = rc232.rc232_serial.serial_init(dev_board_serial_20.port, dev_board_serial_20.baud_rate, dev_board_serial_20.timeout)
+
 try:
     serial_20.open()
 except serial.SerialException as e:
     print(f"Serial communication error: {e}")
 
+
+""" Schedule
+"""
+schedule.every().day.at("00:00").do(time_sync)
+timer_repeated = timeutil.timer.RepeatedTimer(1, radio_read, serial_20) # auto-starts
+
 while(True):
     #radioConfigRead()
-    rc232.rc232_radio.radio_receive(serial_20)
+    #print("running \n")
     time.sleep(0.5)
     
 
