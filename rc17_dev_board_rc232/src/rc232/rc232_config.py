@@ -310,7 +310,8 @@ def __wait_module_response_blocking(serial_object: serial.Serial, decode:bool):
     while time.time() < timeout_start + timeout:
         if (serial_object.in_waiting > 0):
             if(decode == True):
-                serial_val = serial_object.read(serial_object.in_waiting).decode()
+                serial_val_raw = serial_object.read(serial_object.in_waiting).decode()
+                serial_val = serial_val_raw.decode()
             else:
                 serial_val = serial_object.read(serial_object.in_waiting)
             #print("READ: ", serial_val)
