@@ -3,6 +3,13 @@ import serial
 # eg linux '/dev/ttyUSB0'
 # eg windows 'COM3'
 
+class SerialRcDevBoard:
+    def __init__(self, port, baud_rate, timeout):
+        self.port = port
+        self.baud_rate = baud_rate
+        self.timeout = timeout
+
+
 def serial_init(serial_port, baud_rate, timeout_s = 1):
     serial_object = serial.Serial(
         port=serial_port,

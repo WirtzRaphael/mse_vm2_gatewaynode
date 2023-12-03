@@ -1,6 +1,25 @@
-import rc232.rc232
 import serial
 import time
+
+class RadioConfigRead:
+    def __init__(self):
+        self.voltage = 0
+        self.memory_power = 0
+        self.memory_datarate = 0
+        self.temperature = 0
+
+def radio_config_read(serial_object: serial.Serial, radio_config_read: RadioConfigRead):
+    radio_config_read.voltage = rc232.rc232_config.read_voltage(serial_object, dryrun=False)
+    radio_config_read.memory_power = rc232.rc232_config.read_memory_one_byte(serial_object, 0x01 ,dryrun=False)
+    print(f"memory: {radio_config_read.memory_power}")
+    #rc232.rc232_config.set_rf_power(serial_10,1)
+    radio_config_read.memory_datarate = rc232.rc232_config.read_memory_one_byte(serial_object, 0x02, dryrun=False)
+    print(f"memory: {radio_config_read.memory_datarate}")
+
+    radio_config_read.temperature = rc232.rc232_config.read_temperature(serial_object, dryrun=False)
+    print(f"temperature_1: {radio_config_read.temperature_1}")
+    print(f"voltage: {radio_config_read.voltage}")
+
 
 # independent settins
 baud_rate = 5
@@ -214,7 +233,8 @@ def config_non_volatile(serial_object: serial.Serial, dryrun:bool):
     # adress
     # todo: replace example
     __send_command_data_hex(serial_object, 0x01, dryrun)
-    __send_command_data_int(serial_object, 1, dryrun)
+    __send_command_data_char(serial_object, '1', dryrun)
+    #__send_command_data_int(serial_object, 1, dryrun)
     # exit
     __send_command_data_hex(serial_object, 0xFF, dryrun)
     __wait_module_response_prompt_blocking(serial_object, dryrun)

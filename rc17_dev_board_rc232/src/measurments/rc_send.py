@@ -2,8 +2,7 @@ import serial
 import time
 import measurments.testdata
 import fileutils.fileutils
-import rc232.rc232
-import rc232.rc_serial
+import rc232.rc232_serial
 
 def rc_send(serial_object, rc232_config):
     #serial_port = 'COM3'

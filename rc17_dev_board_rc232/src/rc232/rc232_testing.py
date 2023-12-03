@@ -1,8 +1,3 @@
-
-
-
-
- 
  
 class RC232PacketSendTesting:
     def __init__(self,id, content, timestamp):
