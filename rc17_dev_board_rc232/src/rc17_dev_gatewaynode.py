@@ -5,6 +5,7 @@ import rc232.rc232_config
 import rc232.rc232_serial
 import rc232.rc232_radio
 import measurments.rc_send
+import radio.packages
 import timeutil.timer
 import timeutil.timeutil
 import threading 
@@ -40,8 +41,13 @@ def time_sync():
 
 def radio_read(serial_object: serial.Serial):
     print("thread_sensor")
-    rc232.rc232_radio.radio_receive(serial_object)
-    return
+    try:
+        received_package = rc232.rc232_radio.radio_receive(serial_object)
+        received_package_deserialized = radio.packages.deserializationSensor(received_package)
+        print("received_package_deserialized: ", received_package_deserialized)
+    except serial.SerialException as e:
+        print(f"Serial communication error: {e}")
+    
 
 
 """ Initialzation
@@ -67,6 +73,7 @@ class ModeProduction:
         print("RUN production mode \n")
         # init
         serial = init_serial()
+
         # scheduling
         self.timer_repeated = timeutil.timer.RepeatedTimer(1, radio_read, serial) # auto-starts
         schedule.every().day.at("00:00").do(time_sync)
