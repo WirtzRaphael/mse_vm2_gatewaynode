@@ -43,7 +43,7 @@ def radio_read(serial_object: serial.Serial):
     print("thread_sensor")
     try:
         received_package = rc232.rc232_radio.radio_receive(serial_object)
-        received_package_deserialized = radio.packages.deserializationSensor(received_package)
+        received_package_deserialized = radio.packages.deserialization_sensor(received_package)
         print("received_package_deserialized: ", received_package_deserialized)
     except serial.SerialException as e:
         print(f"Serial communication error: {e}")
