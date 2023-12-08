@@ -1,4 +1,3 @@
- 
 class PacketSendSensor:
     def __init__(self,id, content, timestamp):
         self.id = id
@@ -16,6 +15,15 @@ class PacketReceiveSensor:
         self.content = content
         self.rssi = rssi
 
+class PacketReceiveSensorNew:
+    def __init__(self):
+        self.temperature1 = 0
+        self.temperatureId1 = 0
+        self.temperature2 = 0
+        self.temperatureId2 = 0
+
+
+
 class PacketReceiveConfiguration:
     separator = '-J'
     packet_end_char = 'LF'
@@ -26,6 +34,7 @@ def serializationSensor(instance, data):
     string = ""
     return string 
 
+
 # todo : refactore more generalized
 def deserializationSensor(data):
     packetConfig = PacketReceiveConfiguration()
@@ -34,15 +43,16 @@ def deserializationSensor(data):
 
     for packet in packet_list:
         print("packet: ", packet)
-    
-    if data != "":
-        packetReceived = PacketReceiveSensor() 
-        packetReceived.id = data[:3]
-        packetReceived.timestamp = data[3:20]
-        packetReceived.content = data[21:-1]
-        packetReceived.rssi = data[-1:]
+
+    if data != "" and len(packet_list) >= 4:
+        packetReceived = PacketReceiveSensorNew()
+        packetReceived.temperature1 = packet_list[0]
+        packetReceived.temperatureId1 = packet_list[1]
+        packetReceived.temperature2 = packet_list[2]
+        packetReceived.temperatureId2 = packet_list[3]
         return packetReceived
     return
+    
 
 def print_packet_received(package):
     print("id: ", package.id)
