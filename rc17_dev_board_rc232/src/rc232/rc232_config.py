@@ -170,9 +170,6 @@ class RC232Configuration:
         self.encryption_flag = 0
         self.decryption_flag = 0
         
-        
-def rc232_config_init(serial_object: serial.Serial, rc232_config):
-    return
 
 # ==== FLOW DIAGRAM ====
 #
@@ -200,7 +197,7 @@ def rc232_config_init(serial_object: serial.Serial, rc232_config):
 def config_cmd(serial_object: serial.Serial, cmd, dryrun:bool, cmd_type="char", argument=None, arg_type="int", return_value=False):
     try:
         __exit_config_mode(serial_object)
-        # fixme: separate function config pin low
+        # fixme: separate function to pull config pin low
         __wait_module_response_prompt_blocking(serial_object, dryrun)
         if cmd_type == "hex":
             __send_command_data_hex(serial_object, cmd, dryrun)
@@ -243,7 +240,6 @@ def config_non_volatile(serial_object: serial.Serial, dryrun:bool):
 
 def read_temperature(serial_object: serial.Serial, dryrun:bool):
     try:
-        # todo replace with config cmd
         __exit_config_mode(serial_object)
         __wait_module_response_prompt_blocking(serial_object, dryrun)
         __send_command_data_char(serial_object, "U", dryrun)

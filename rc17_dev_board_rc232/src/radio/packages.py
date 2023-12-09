@@ -17,17 +17,10 @@ class PacketReceiveSensor:
         self.temperatureId2 = temperatureId2
 
 
-
 class PacketReceiveConfiguration:
     payload_separator = '-'
     package_end_char = ';'
     rc_232_packet_end_char = 'LF'
-
-def serialization_sensor(instance, data):
-    # todo : packet size
-    #string = str(data.id) + str(data.timestamp) + str(data.content) + str(data.separator)
-    string = ""
-    return string 
 
 
 # todo : refactore more generalized
