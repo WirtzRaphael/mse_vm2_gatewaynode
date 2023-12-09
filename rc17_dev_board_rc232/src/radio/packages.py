@@ -1,3 +1,4 @@
+# todo : obsolet
 class PacketSendSensor:
     def __init__(self,id, content, timestamp):
         self.id = id
@@ -18,8 +19,9 @@ class PacketReceiveSensor:
 
 
 class PacketReceiveConfiguration:
-    separator = '-J'
-    packet_end_char = 'LF'
+    payload_separator = '-'
+    package_end_char = ';'
+    rc_232_packet_end_char = 'LF'
 
 def serialization_sensor(instance, data):
     # todo : packet size
@@ -31,22 +33,23 @@ def serialization_sensor(instance, data):
 # todo : refactore more generalized
 def deserialization_sensor(data):
     packetConfig = PacketReceiveConfiguration()
-    packet_list = data.split(packetConfig.separator)
+    packet_list = data.split(packetConfig.package_end_char)
     print(packet_list)
 
     for packet in packet_list:
         print("packet: ", packet)
-
-    # hint : packet list sometimes with more characters
-    if data != "" and len(packet_list) >= 4:
-        packetReceived = PacketReceiveSensor(
-            temperature1 = packet_list[0],
-            temperatureId1 = packet_list[1],
-            temperature2 = packet_list[2],
-            temperatureId2 = packet_list[3]
-        )
-        return packetReceived
-    return
+        payload_list = packet.split(packetConfig.payload_separator)
+        print("payload_list: ", payload_list)
+        # hint : payload list sometimes with more characters
+        if data != "" and len(payload_list) >= 4:
+            packetReceived = PacketReceiveSensor(
+                temperature1 = packet_list[0],
+                temperatureId1 = packet_list[1],
+                temperature2 = packet_list[2],
+                temperatureId2 = packet_list[3]
+            )
+            return packetReceived
+        return
     
 
 def print_packet_received_sensor(package):
