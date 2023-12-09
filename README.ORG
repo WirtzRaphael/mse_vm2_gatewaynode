@@ -37,3 +37,15 @@ activate in console
 ```
 source ./.venv/bin/activate
 ```
+
+*Raspberry Pi*
+SSS Connection to raspberry pi
+requires an (empty) ssh file on the boot partition
+```
+ssh username@host(IP/Domaimn_name)
+```
+
+Scan network for IP addresses
+```
+sudo nmap -sn 192.168.1.0/24
+``
