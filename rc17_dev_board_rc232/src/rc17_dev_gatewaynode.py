@@ -8,20 +8,19 @@ import measurments.rc_send
 import radio.packages
 import timeutil.timer
 import timeutil.timeutil
-import threading 
 import schedule 
 from schedule import every, repeat
 
 """ Variables
 """
-serial_port = '/dev/ttyUSB0'
+serial_port = '/dev/ttyUSB1'
 baud_rate = 19200 
 timeout = 1
 
 operation_mode = {
-    'production',
-    'debug'
-    'testing'
+    'pc',
+    'raspberry_pi',
+    'pc_performance_testing'
 }
 
 
@@ -47,7 +46,6 @@ def radio_read(serial_object: serial.Serial):
         print("received_package_deserialized: ", received_package_deserialized)
     except serial.SerialException as e:
         print(f"Serial communication error: {e}")
-    
 
 
 """ Initialzation
@@ -63,14 +61,12 @@ def init_serial():
     return serial_20
 
 
-operation_mode = 'production'
-
-class ModeProduction:
+class ModePc:
     def __init(self):
         self.timer_repeated = None
 
     def __enter__(self, *args, **kwargs):
-        print("RUN production mode \n")
+        print("RUN pc mode \n")
         # init
         serial = init_serial()
 
@@ -79,32 +75,35 @@ class ModeProduction:
         schedule.every().day.at("00:00").do(time_sync)
 
     def __exit__(self, *args):
-        print("--EXIT production mode--")
+        print("--EXIT pc mode--")
         self.timer_repeated.stop()
 
 
-def run_mode_production():
+def run_mode_pc():
     return
 
-def run_mode_debug():
+def run_mode_raspberry_pi():
     return
 
-def run_mode_testing():
+def run_mode_pc_performance_testing():
+    # todo : check with new implementation
     measurments.rc_send.rc_send(serial_20, dev_board_config_20)
     return
 
+operation_mode = 'pc'
+
 while(True):
     match operation_mode:
-        case 'production':
-            with ModeProduction():
+        case 'pc':
+            with ModePc():
                 while(operation_mode == 'production'):
-                    run_mode_production()
-        case 'debug':
-            print("debug \n")
-            run_mode_debug()
-        case 'testing':
-            print("testing \n")
-            run_mode_testing()
+                    run_mode_pc()
+        case 'raspberry_pi':
+            print("MODE: raspberry pi \n")
+            run_mode_raspberry_pi()
+        case 'pc_performance_testing':
+            print("MODE: performance testing \n")
+            run_mode_pc_performance_testing()
         case _:
             print("no mode\n")
     time.sleep(0.5)
