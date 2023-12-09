@@ -14,10 +14,6 @@
 python3 -m pip install influxdb
 ```
 
-python packages
-- pre-commit
-- pytest-cov
-
 
 Add git hook for pre-commit
 ```
