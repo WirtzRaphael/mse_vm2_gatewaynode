@@ -37,10 +37,10 @@ def deserialization_sensor(packages):
         if len(payload_list) >= 4:
             packetReceived = PacketReceiveSensor(
                 timertc = payload_list[0],
-                temperature1 = packet_list[1],
-                temperatureId1 = packet_list[2],
-                temperature2 = packet_list[3],
-                temperatureId2 = packet_list[4]
+                temperature1 = payload_list[1],
+                temperatureId1 = payload_list[2],
+                temperature2 = payload_list[3],
+                temperatureId2 = payload_list[4]
             )
             return packetReceived
         return
