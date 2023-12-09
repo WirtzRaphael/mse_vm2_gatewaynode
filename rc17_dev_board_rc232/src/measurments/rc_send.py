@@ -2,7 +2,7 @@ import serial
 import time
 import measurments.testdata
 import fileutils.fileutils
-import rc232.rc232_serial
+import rc232.serial
 
 def rc_send(serial_object, rc232_config):
     #serial_port = 'COM3'
@@ -16,7 +16,7 @@ def rc_send(serial_object, rc232_config):
     for send_package in send_packages: 
         ##### SEND
         print("-- SERIALIZE")
-        send_package_serialized = rc232.rc232.serializationTesting(rc232_config, send_package)
+        send_package_serialized = rc232.testing.serializationTesting(rc232_config, send_package)
         file_ser.write(send_package_serialized + "\n")
         print(send_package_serialized)
 

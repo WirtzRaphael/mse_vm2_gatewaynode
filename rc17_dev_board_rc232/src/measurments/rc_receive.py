@@ -1,9 +1,8 @@
 import serial
 import time
 import measurments.testdata
-import rc232.rc232
-import rc232.rc232_config
-import rc232.rc_serial
+import rc232.config
+import rc232.serial
 
 
 

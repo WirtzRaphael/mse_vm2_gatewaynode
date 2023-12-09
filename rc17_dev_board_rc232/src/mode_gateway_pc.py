@@ -13,7 +13,7 @@ import timeutil.timer
 """ Initialzation
 """
 def init_serial(serial_port: str, baud_rate: int = 19200, timeout: int = 1):
-    serial_object = rc232.rc232_serial.serial_init(serial_port, baud_rate, timeout)
+    serial_object = rc232.serial.serial_init(serial_port, baud_rate, timeout)
     try:
         serial_object.open()
     except serial.SerialException as e:
@@ -48,10 +48,11 @@ def time_sync():
 def radio_read(serial_object: serial.Serial):
     print("thread_sensor")
     try:
-        received_package = rc232.rc232_radio.radio_receive(serial_object)
+        received_package = rc232.radio.radio_receive(serial_object)
         received_package_deserialized = radio.packages.deserialization_sensor(received_package)
         print("received_package_deserialized: ", received_package_deserialized)
         # todo : write to db
+        db.sqlite.create_connection(db_file = r"gateway.db")
     except serial.SerialException as e:
         print(f"Serial communication error: {e}")
 
@@ -71,5 +72,5 @@ class mode_gateway_pc:
 
     def __exit__(self, *args):
         print("EXIT pc mode")
-        deinit_serial(serial_rc)
+        deinit_serial(self.serial_rc)
         self.timer_repeated.stop()
