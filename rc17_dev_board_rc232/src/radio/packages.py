@@ -1,3 +1,5 @@
+
+
 # todo : obsolet
 class PacketSendSensor:
     def __init__(self,id, content, timestamp):
@@ -10,12 +12,15 @@ class PacketSendSensor:
 
 
 class PacketReceiveSensor:
-    def __init__(self, timertc, temperature1, temperatureId1, temperature2, temperatureId2):
+    # todo : only use temperature and id pair
+    def __init__(self, timertc, temperature1, temperatureId1, temperature2, temperatureId2, temperature3, temperatureId3):
         self_timerRtc = timertc
         self.temperature1 = temperature1
         self.temperatureId1 = temperatureId1
         self.temperature2 = temperature2
         self.temperatureId2 = temperatureId2
+        self.temperature3 = temperature3
+        self.temperatureId3 = temperatureId3
 
 
 class PacketReceiveConfiguration:
@@ -23,6 +28,10 @@ class PacketReceiveConfiguration:
     package_end_char = ';'
     rc_232_packet_end_char = 'LF'
 
+
+def split_into_packages(packages):
+    # todo : implement (see split package below)
+    pass
 
 # todo : refactore more generalized
 def deserialization_sensor(packages):
@@ -37,10 +46,13 @@ def deserialization_sensor(packages):
         if len(payload_list) >= 4:
             packetReceived = PacketReceiveSensor(
                 timertc = payload_list[0],
+                # todo : avoid hardcoding, dynamic payload size (out of range), try catch
                 temperature1 = payload_list[1],
                 temperatureId1 = payload_list[2],
                 temperature2 = payload_list[3],
-                temperatureId2 = payload_list[4]
+                temperatureId2 = payload_list[4],
+                temperature3 = payload_list[5],
+                temperatureId3 = payload_list[6],
             )
             return packetReceived
         return
