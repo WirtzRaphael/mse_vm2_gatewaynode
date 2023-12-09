@@ -4,8 +4,6 @@ import measurments.testdata
 import rc232.config
 import rc232.serial
 
-
-
 def rc_receive(serial_object: serial.Serial, rc232_config):
     file_rec = open("log/test_data_received.txt", "w")
     counter = 1
@@ -28,4 +26,3 @@ def rc_receive(serial_object: serial.Serial, rc232_config):
     file_rec.close()
 
     return
-
