@@ -48,8 +48,9 @@ def time_sync():
 def radio_read(serial_object: serial.Serial):
     print("thread_sensor")
     try:
-        received_package = rc232.radio.radio_receive(serial_object)
-        received_package_deserialized = radio.packages.deserialization_sensor(received_package)
+        received_stream = rc232.radio.radio_receive(serial_object)
+        received_packages = radio.packages.split_into_packages(received_stream)
+        received_package_deserialized = radio.packages.deserialization_sensor(received_packages)
         print("received_package_deserialized: ", received_package_deserialized)
         # todo : write to db
         db.sqlite.create_connection(db_file = r"gateway.db")
