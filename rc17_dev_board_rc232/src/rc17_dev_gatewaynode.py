@@ -13,7 +13,7 @@ from schedule import every, repeat
 
 """ Variables
 """
-serial_port = '/dev/ttyUSB1'
+serial_port = '/dev/ttyUSB2'
 baud_rate = 19200 
 timeout = 1
 
@@ -44,6 +44,7 @@ def radio_read(serial_object: serial.Serial):
         received_package = rc232.rc232_radio.radio_receive(serial_object)
         received_package_deserialized = radio.packages.deserialization_sensor(received_package)
         print("received_package_deserialized: ", received_package_deserialized)
+        # todo : write to db
     except serial.SerialException as e:
         print(f"Serial communication error: {e}")
 
@@ -69,13 +70,12 @@ class ModePc:
         print("RUN pc mode \n")
         # init
         serial = init_serial()
-
         # scheduling
         self.timer_repeated = timeutil.timer.RepeatedTimer(1, radio_read, serial) # auto-starts
         schedule.every().day.at("00:00").do(time_sync)
 
     def __exit__(self, *args):
-        print("--EXIT pc mode--")
+        print("EXIT pc mode")
         self.timer_repeated.stop()
 
 
@@ -96,7 +96,7 @@ while(True):
     match operation_mode:
         case 'pc':
             with ModePc():
-                while(operation_mode == 'production'):
+                while(operation_mode == 'pc'):
                     run_mode_pc()
         case 'raspberry_pi':
             print("MODE: raspberry pi \n")

@@ -10,7 +10,8 @@ class PacketSendSensor:
 
 
 class PacketReceiveSensor:
-    def __init__(self, temperature1, temperatureId1, temperature2, temperatureId2):
+    def __init__(self, timertc, temperature1, temperatureId1, temperature2, temperatureId2):
+        self_timerRtc = timertc
         self.temperature1 = temperature1
         self.temperatureId1 = temperatureId1
         self.temperature2 = temperature2
@@ -24,22 +25,22 @@ class PacketReceiveConfiguration:
 
 
 # todo : refactore more generalized
-def deserialization_sensor(data):
+def deserialization_sensor(packages):
+    if packages == "":
+        return
     packetConfig = PacketReceiveConfiguration()
-    packet_list = data.split(packetConfig.package_end_char)
-    print(packet_list)
+    packet_list = packages.split(packetConfig.package_end_char)
 
     for packet in packet_list:
-        print("packet: ", packet)
         payload_list = packet.split(packetConfig.payload_separator)
-        print("payload_list: ", payload_list)
         # hint : payload list sometimes with more characters
-        if data != "" and len(payload_list) >= 4:
+        if len(payload_list) >= 4:
             packetReceived = PacketReceiveSensor(
-                temperature1 = packet_list[0],
-                temperatureId1 = packet_list[1],
-                temperature2 = packet_list[2],
-                temperatureId2 = packet_list[3]
+                timertc = payload_list[0],
+                temperature1 = packet_list[1],
+                temperatureId1 = packet_list[2],
+                temperature2 = packet_list[3],
+                temperatureId2 = packet_list[4]
             )
             return packetReceived
         return

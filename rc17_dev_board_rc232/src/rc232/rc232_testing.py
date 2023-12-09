@@ -19,7 +19,7 @@ class RC232PacketReceiveTesting:
         
 # todo : rename class 
 def serializationTesting(instance, data):
-    # todo : packet size
+    # todo : determine packet size
     string = str(data.id) + str(data.timestamp) + str(data.content) + str(data.separator)
     return string 
 
