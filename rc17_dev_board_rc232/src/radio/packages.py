@@ -1,4 +1,3 @@
-
 PAYLOAD_SEPARATOR = '-'
 PACKAGE_END_CHAR = ';'
 RC_232_PACKET_END_CHAR = 'LF'
@@ -9,13 +8,29 @@ PAYLOAD_INDEX_SENSOR_TEMPERATURE = 3
 
 PAYLOAD_LENGTH_TEMPERATURE = 2
 
+class ProtocolPayload:
+    def __init__(self, sensor_nr, timestampRtc) -> None:
+        self.sensor_nr = sensor_nr
+        self.timestampRtc = timestampRtc
+        self.sensorTemperatureValues = []
+    
+    def add_payload_temperature(self, temperature, sensorId):
+        sensorTemperature = _PayloadTemperature(temperature, sensorId)
+        self.sensorTemperatureValues.append(sensorTemperature)
+
+    def print_payload(self):
+        print("Payload: ")
+        for sensorTemperature in self.sensorTemperatureValues:
+            print("SensorId: ", sensorTemperature.temperatureId)
+            print("Temperature: ", sensorTemperature.temperature)
+
 def split_into_packages(package_stream):
     if package_stream == "":
         return
     packet_list = package_stream.split(PACKAGE_END_CHAR)
     return packet_list
 
-def payload_readout(package):
+def payload_readout(package) -> ProtocolPayload:
     payload_list = package.split(PAYLOAD_SEPARATOR)
     # fix : magic number
     if payload_list == None or len(payload_list) <= 2:
@@ -90,21 +105,7 @@ class PacketReceiveSensor:
         self.temperature3 = temperature3
         self.temperatureId3 = temperatureId3
 
-class ProtocolPayload:
-    def __init__(self, sensor_nr, timestampRtc) -> None:
-        self.sensor_nr = sensor_nr
-        self.timestampRtc = timestampRtc
-        self.sensorTemperatureValues = []
-    
-    def add_payload_temperature(self, temperature, sensorId):
-        sensorTemperature = _PayloadTemperature(temperature, sensorId)
-        self.sensorTemperatureValues.append(sensorTemperature)
 
-    def print_payload(self):
-        print("Payload: ")
-        for sensorTemperature in self.sensorTemperatureValues:
-            print("SensorId: ", sensorTemperature.temperatureId)
-            print("Temperature: ", sensorTemperature.temperature)
 
 class _PayloadTemperature:
     def __init__(self, temperature, temperatureId):
