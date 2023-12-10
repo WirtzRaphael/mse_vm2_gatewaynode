@@ -1,6 +1,18 @@
 import sqlite3
 from sqlite3 import Error
-
+class DbConnection:
+    def __init__(self, db_file):
+        self.db_file = db_file
+        self.connection = None
+    
+    def __enter__(self, *args, **kwargs):
+        self.connection = create_connection(self.db_file)
+        return self.connection
+    
+    def __exit__(self, *args, **kwargs):
+        close_connection(self.connection)
+        return
+    
 def create_connection(db_file):
     """ create a database connection to a SQLite database """
     connection = None
@@ -39,4 +51,3 @@ def create_connection_test(db_file):
     finally:
         if connection:
             connection.close()
-

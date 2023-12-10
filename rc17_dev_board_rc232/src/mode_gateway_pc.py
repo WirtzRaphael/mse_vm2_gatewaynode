@@ -57,30 +57,29 @@ def time_sync():
     return
 
 def radio_read(serial_object: serial.Serial):
-    print("thread_sensor")
     try:
         received_stream = rc232.radio.radio_receive(serial_object)
-        print(received_stream)
         received_packages = radio.packages.split_into_packages(received_stream)
+        if received_packages == None:
+            return None
+        
         received_payloads = []
-        if received_packages != None:
-            for package in received_packages:
-                received_payloads.append(radio.packages.payload_readout(package))
-                pass
-            db_connection = db.sqlite.create_connection(db_file = r"gateway.db")
+        for package in received_packages:
+            received_payloads.append(radio.packages.payload_readout(package))
+            pass
+        
+        with db.sqlite.DbConnection(DB_FILEPATH) as db_connection:
             for received_payload in received_payloads:
                 if received_payload == None:
                     continue
                 if received_payload.sensor_nr == '1':
                     for sensorTemperature in received_payload.sensorTemperatureValues:
                         db.db.insert_temperature_into_temperature1(connection = db_connection,
-                                                                  temperature = (
-                                                                      received_payload.timestampRtc,
-                                                                      sensorTemperature.temperatureId,
-                                                                      sensorTemperature.temperature))
-                pass
-            db.sqlite.close_connection(db_connection)
-            # todo : write to db
+                                                                    temperature = (
+                                                                        received_payload.timestampRtc,
+                                                                        sensorTemperature.temperatureId,
+                                                                        sensorTemperature.temperature))
+            pass
     except serial.SerialException as e:
         print(f"Serial communication error: {e}")
     return None 
