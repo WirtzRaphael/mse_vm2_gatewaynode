@@ -1,5 +1,5 @@
 import db.sqlite
-import db.db
+import db.db_operation
 import radio.packages
 import rc232.testing
 import rc232.config
@@ -35,7 +35,7 @@ def init_db(db_file):
     db_connection = db.sqlite.create_connection(db_file)
     if db_connection is not None:
         db.sqlite.create_table(connection = db_connection,
-                               create_table_sql = db.db.sql_create_temperature_1_table)
+                               create_table_sql = db.db_operation.sql_create_temperature_1_table)
         db.sqlite.close_connection(db_connection)
     return None
 
@@ -74,7 +74,7 @@ def radio_read(serial_object: serial.Serial):
                     continue
                 if received_payload.sensor_nr == '1':
                     for sensorTemperature in received_payload.sensorTemperatureValues:
-                        db.db.insert_temperature_into_temperature1(connection = db_connection,
+                        db.db_operation.insert_temperature_into_temperature1(connection = db_connection,
                                                                     temperature = (
                                                                         received_payload.timestampRtc,
                                                                         sensorTemperature.temperatureId,
