@@ -10,6 +10,8 @@ import serial
 import timeutil.timer
 
 
+SERIAL_PORT_RC_DEVBOAD = '/dev/ttyUSB1'
+
 """ Initialzation
 """
 def init_serial(serial_port: str, baud_rate: int = 19200, timeout: int = 1):
@@ -49,9 +51,14 @@ def radio_read(serial_object: serial.Serial):
     print("thread_sensor")
     try:
         received_stream = rc232.radio.radio_receive(serial_object)
+        print(received_stream)
         received_packages = radio.packages.split_into_packages(received_stream)
-        received_package_deserialized = radio.packages.deserialization_sensor(received_packages)
-        print("received_package_deserialized: ", received_package_deserialized)
+        if received_packages != None:
+            for package in received_packages:
+                received_payload = radio.packages.payload_readout(package)
+                #received_package_deserialized = radio.packages.deserialization_sensor(package)
+                print("received payload: ", received_payload)
+                pass
         # todo : write to db
         db.sqlite.create_connection(db_file = r"gateway.db")
     except serial.SerialException as e:
@@ -66,7 +73,7 @@ class mode_gateway_pc:
     def __enter__(self, *args, **kwargs):
         print("RUN pc mode \n")
         # init
-        serial_rc = init_serial(serial_port= '/dev/ttyUSB2')
+        serial_rc = init_serial(serial_port= SERIAL_PORT_RC_DEVBOAD)
         # scheduling
         self.timer_repeated = timeutil.timer.RepeatedTimer(1, radio_read, serial_rc) # auto-starts
         schedule.every().day.at("00:00").do(time_sync)
