@@ -22,7 +22,7 @@ def radio_config_read(serial_object: serial.Serial, radio_config_read: RadioConf
     print(f"voltage: {radio_config_read.voltage}")
 
 
-# independent settins
+# independent settings
 baud_rate = 5
 data_rate = 4 
 sleep_mode = 0
