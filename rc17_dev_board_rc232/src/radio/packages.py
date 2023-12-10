@@ -1,8 +1,13 @@
 
-
 PAYLOAD_SEPARATOR = '-'
 PACKAGE_END_CHAR = ';'
 RC_232_PACKET_END_CHAR = 'LF'
+
+PAYLOAD_INDEX_TIMESTAMP_RTC = 1
+PAYLOAD_INDEX_SENSOR_NR = 2
+PAYLOAD_INDEX_SENSOR_TEMPERATURE = 3
+
+PAYLOAD_LENGTH_TEMPERATURE = 2
 
 def split_into_packages(package_stream):
     if package_stream == "":
@@ -15,17 +20,24 @@ def payload_readout(package):
     # fix : magic number
     if payload_list == None or len(payload_list) <= 2:
         return
+    try:
+        package_index_temperature = payload_list.index('T')
+    except ValueError:
+        return
     
     payload = ProtocolPayload(
-        timestampRtc=payload_list[0],
-        sensor_nr=payload_list[1]
+        timestampRtc=payload_list[package_index_temperature + PAYLOAD_INDEX_TIMESTAMP_RTC],
+        sensor_nr=payload_list[package_index_temperature + PAYLOAD_INDEX_SENSOR_NR]
     )
     
-    # fix : magic number
-    for x in range(2, len(payload_list),2):
-        #print("payload_list 0: ", payload_list[x])
-        #print("payload_list 1: ", payload_list[x+1])
-        payload.add_payload_temperature(payload_list[x], payload_list[x+1])
+    for x in range(package_index_temperature + PAYLOAD_INDEX_SENSOR_TEMPERATURE, len(payload_list), package_index_temperature + PAYLOAD_LENGTH_TEMPERATURE):
+        try:
+            #print("payload_list 0: ", payload_list[x])
+            #print("payload_list 1: ", payload_list[x+1])
+            payload.add_payload_temperature(payload_list[x], payload_list[x+1])
+        except IndexError:
+            # index out of bounds, corrupt or incomplete values
+            pass
         pass # no content, avoid error
     return payload
 
