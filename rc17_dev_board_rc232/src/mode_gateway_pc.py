@@ -1,4 +1,5 @@
 import db.sqlite
+import db.db
 import radio.packages
 import rc232.testing
 import rc232.config
@@ -9,8 +10,8 @@ from schedule import every, repeat
 import serial
 import timeutil.timer
 
-
 SERIAL_PORT_RC_DEVBOAD = '/dev/ttyUSB1'
+DB_FILEPATH = r"gateway.db"
 
 """ Initialzation
 """
@@ -29,6 +30,14 @@ def deinit_serial(serial_object: serial.Serial):
         print(f"Serial communication error: {e}")
     return None
 
+def init_db(db_file):
+    db.sqlite.create_connection_test(db_file)
+    db_connection = db.sqlite.create_connection(db_file)
+    if db_connection is not None:
+        db.sqlite.create_table(connection = db_connection,
+                               create_table_sql = db.db.sql_create_temperature_1_table)
+        db.sqlite.close_connection(db_connection)
+    return None
 
 """ Functions
 """
@@ -54,16 +63,23 @@ def radio_read(serial_object: serial.Serial):
         print(received_stream)
         received_packages = radio.packages.split_into_packages(received_stream)
         if received_packages != None:
+            db_connection = db.sqlite.create_connection(db_file = r"gateway.db")
             for package in received_packages:
                 received_payload = radio.packages.payload_readout(package)
-                #received_package_deserialized = radio.packages.deserialization_sensor(package)
-                print("received payload: ", received_payload)
-                pass
-        # todo : write to db
-        db.sqlite.create_connection(db_file = r"gateway.db")
+                if received_payload != None:
+                    if received_payload.sensor_nr == '1':
+                        db.db.insert_temperature_into_temperature1(connection = db_connection,
+                                                temperature = (
+                                                    received_payload.timestampRtc,
+                                                    received_payload.sensorTemperatureValues[1].temperatureId,
+                                                    received_payload.sensorTemperatureValues[1].temperature
+                                                    ))
+                    pass
+            db.sqlite.close_connection(db_connection)
+            # todo : write to db
     except serial.SerialException as e:
         print(f"Serial communication error: {e}")
-
+    return None 
 
 class mode_gateway_pc:
     def __init__(self):
@@ -72,8 +88,9 @@ class mode_gateway_pc:
 
     def __enter__(self, *args, **kwargs):
         print("RUN pc mode \n")
-        # init
+        # initalization
         serial_rc = init_serial(serial_port= SERIAL_PORT_RC_DEVBOAD)
+        init_db(DB_FILEPATH)
         # scheduling
         self.timer_repeated = timeutil.timer.RepeatedTimer(1, radio_read, serial_rc) # auto-starts
         schedule.every().day.at("00:00").do(time_sync)
