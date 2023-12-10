@@ -31,12 +31,16 @@ def deinit_serial(serial_object: serial.Serial):
     return None
 
 def init_db(db_file):
-    db.sqlite.create_connection_test(db_file)
-    db_connection = db.sqlite.create_connection(db_file)
-    if db_connection is not None:
-        db.sqlite.create_table(connection = db_connection,
-                               create_table_sql = db.db_operation.sql_create_temperature_1_table)
-        db.sqlite.close_connection(db_connection)
+    with db.sqlite.DbConnection(db_file) as db_connection:
+        if db_connection is not None:
+            db.sqlite.create_table(connection = db_connection,
+                                create_table_sql = db.db_operation.SQL_CREATE_GATEWAYNODE_TABLE)
+            db.sqlite.create_table(connection = db_connection,
+                                create_table_sql = db.db_operation.SQL_CREATE_SENSORNODES_TABLE)
+            db.sqlite.create_table(connection = db_connection,
+                                create_table_sql = db.db_operation.SQL_CREATE_TEMPERATURE_1_TABLE)
+            db.sqlite.create_table(connection = db_connection,
+                                create_table_sql = db.db_operation.SQL_CREATE_TEMPERATURE_2_TABLE)
     return None
 
 """ Functions
