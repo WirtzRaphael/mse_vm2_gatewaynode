@@ -24,6 +24,11 @@ class ProtocolPayload:
             print("SensorId: ", sensorTemperature.temperatureId)
             print("Temperature: ", sensorTemperature.temperature)
 
+class _PayloadTemperature:
+    def __init__(self, temperature, temperatureId):
+        self.temperature = temperature
+        self.temperatureId = temperatureId
+
 def split_into_packages(package_stream):
     if package_stream == "":
         return
@@ -56,26 +61,6 @@ def payload_readout(package) -> ProtocolPayload:
         pass # no content, avoid error
     return payload
 
-
-# todo : remove
-def deserialization_sensor(package):
-    payload_list = package.split(PAYLOAD_SEPARATOR)
-    # hint : payload list sometimes with more characters
-    if len(payload_list) >= 4:
-        packetReceived = PacketReceiveSensor(
-            timertc = payload_list[0],
-            # todo : avoid hardcoding, dynamic payload size (out of range), try catch
-            temperature1 = payload_list[1],
-            temperatureId1 = payload_list[2],
-            temperature2 = payload_list[3],
-            temperatureId2 = payload_list[4],
-            temperature3 = payload_list[5],
-            temperatureId3 = payload_list[6],
-        )
-        return packetReceived
-    return
-    
-
 def print_package_received_sensor(package):
     print("temperature1: ", package.temperature1)
     print("temperature1 Id: ", package.temperatureId1)
@@ -83,31 +68,3 @@ def print_package_received_sensor(package):
     print("temperature2 Id: ", package.temperatureId2)
 
 
-# todo : obsolet
-class PacketSendSensor:
-    def __init__(self,id, content, timestamp):
-        self.id = id
-        self.timestamp = timestamp
-        self.content = content
-        self.separator = ';'
-    def __repr__(self):
-        return "{0},{1},{2}".format(self.id, self.timestamp, self.content)
-
-
-class PacketReceiveSensor:
-    # todo : only use temperature and id pair
-    def __init__(self, timertc, temperature1, temperatureId1, temperature2, temperatureId2, temperature3, temperatureId3):
-        self_timerRtc = timertc
-        self.temperature1 = temperature1
-        self.temperatureId1 = temperatureId1
-        self.temperature2 = temperature2
-        self.temperatureId2 = temperatureId2
-        self.temperature3 = temperature3
-        self.temperatureId3 = temperatureId3
-
-
-
-class _PayloadTemperature:
-    def __init__(self, temperature, temperatureId):
-        self.temperature = temperature
-        self.temperatureId = temperatureId
