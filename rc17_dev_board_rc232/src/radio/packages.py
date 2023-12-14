@@ -39,6 +39,10 @@ class _PayloadTemperature:
         self.temperature = temperature
         self.temperatureId = temperatureId
         self.time_relative_to_reference = time_relative_to_reference_rtc
+        
+class ProtocolPayloadStatus:
+    def __init__(self, status):
+        self.status = status
 
 def split_into_packages(package_stream):
     if package_stream == "":
@@ -82,7 +86,7 @@ def _payload_readout_temperature(payload_list, payload_index_start_temperature) 
         pass # no content, avoid error
     return payload
 
-def _payload_readout_status(payload_list, payload_index_start_status):
+def _payload_readout_status(payload_list, payload_index_start_status) -> ProtocolPayloadStatus:
     # todo : implement
     pass
 
