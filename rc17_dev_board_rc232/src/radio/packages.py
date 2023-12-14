@@ -1,12 +1,11 @@
-PAYLOAD_SEPARATOR = '-'
 PACKAGE_END_CHAR = ';'
 RC_232_PACKET_END_CHAR = 'LF'
 
 PAYLOAD_INDEX_TIMESTAMP_RTC = 1
 PAYLOAD_INDEX_SENSOR_NR = 2
 PAYLOAD_INDEX_SENSOR_TEMPERATURE = 3
-
 PAYLOAD_LENGTH_TEMPERATURE = 3 # temperature, sensorId, time_relative_to_reference_rtc
+PAYLOAD_SEPARATOR = '-'
 
 payload_descriptor = {
     'T': 'temperature',
@@ -78,7 +77,7 @@ def _payload_readout_temperature(payload_list, payload_index_start_temperature) 
             #print("payload_list 1: ", payload_list[x+1])
             payload.add_payload_temperature(payload_list[x], payload_list[x+1], payload_list[x+2])
         except IndexError:
-            # index out of bounds, corrupt or incomplete values
+            # index out of bounds, corruptPAYLOAD_SEPARATOR = '-' or incomplete values
             pass
         pass # no content, avoid error
     return payload
