@@ -46,7 +46,8 @@ def init_db(db_file):
 """ Functions
 """
 def run_mode_gateway_pc():
-   return
+    schedule.run_pending()
+    return
 
 @repeat(every(20).seconds, message = "write")
 @repeat(every(100).seconds, message = "check")
@@ -66,35 +67,40 @@ def radio_read(serial_object: serial.Serial):
         received_packages = radio.packages.split_into_packages(received_stream)
         if received_packages == None:
             return None
-        
-        received_payloads = list()
-        for package in received_packages: 
-            payload = radio.packages.payload_readout(package)
-            received_payloads.append(payload)
-        
-        with database.sqlite.DbConnection(DB_FILEPATH) as db_connection:
-            for received_payload in received_payloads:
-                if received_payload == None:
-                    continue
-                # todo : fix sql injection
-                if received_payload.sensor_nr == '1':
-                    for sensorTemperature in received_payload.sensorTemperatureValues:
-                        database.db_operation.insert_temperature_into_temperature1(connection = db_connection,
-                                                                    temperature = (
-                                                                        received_payload.timestampRtc,
-                                                                        sensorTemperature.temperatureId,
-                                                                        sensorTemperature.temperature))
-                if received_payload.sensor_nr == '2':
-                    for sensorTemperature in received_payload.sensorTemperatureValues:
-                        database.db_operation.insert_temperature_into_temperature2(connection = db_connection,
-                                                                    temperature = (
-                                                                        received_payload.timestampRtc,
-                                                                        sensorTemperature.temperatureId,
-                                                                        sensorTemperature.temperature))
-            pass
+        pass
     except serial.SerialException as e:
         print(f"Serial communication error: {e}")
+        
+    received_payloads = list()
+    testlist = list()
+    for package in received_packages: 
+        payload = radio.packages.payload_readout(package)
+        received_payloads.append(payload)
+        testlist.append("new value")
+    
+    print("db operation \n")
+    with database.sqlite.DbConnection(DB_FILEPATH) as db_connection:
+        for received_payload in received_payloads:
+            if received_payload == None:
+                continue
+            # todo : prefix char (t)
+            # todo : fix sql injection
+            if received_payload.sensor_nr == '1':
+                for sensorTemperature in received_payload.sensorTemperatureValues:
+                    database.db_operation.insert_temperature_into_temperature1(connection = db_connection,
+                                                                temperature = (
+                                                                    received_payload.timestampRtc,
+                                                                    sensorTemperature.temperatureId,
+                                                                    sensorTemperature.temperature))
+            if received_payload.sensor_nr == '2':
+                for sensorTemperature in received_payload.sensorTemperatureValues:
+                    database.db_operation.insert_temperature_into_temperature2(connection = db_connection,
+                                                                temperature = (
+                                                                    received_payload.timestampRtc,
+                                                                    sensorTemperature.temperatureId,
+                                                                    sensorTemperature.temperature))
     return None 
+
 
 class mode_gateway_pc:
     def __init__(self):
@@ -107,7 +113,8 @@ class mode_gateway_pc:
         serial_rc = init_serial(serial_port= SERIAL_PORT_RC_DEVBOAD)
         init_db(DB_FILEPATH)
         # scheduling
-        self.timer_repeated = timeutil.timer.RepeatedTimer(1, radio_read, serial_rc) # auto-starts
+        #self.timer_repeated = timeutil.timer.RepeatedTimer(1,radio_read, serial_rc) # auto-starts
+        schedule.every(1).seconds.do(radio_read, serial_rc)
         schedule.every().day.at("00:00").do(time_sync)
 
     def __exit__(self, *args):
