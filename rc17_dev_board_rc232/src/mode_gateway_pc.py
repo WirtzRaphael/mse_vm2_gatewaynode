@@ -36,13 +36,13 @@ def init_db(db_file):
     with database.sqlite.DbConnection(db_file) as db_connection:
         if db_connection is not None:
             database.sqlite.create_table(connection = db_connection,
-                                create_table_sql = database.db_operation.SQL_CREATE_GATEWAYNODE_TABLE)
+                                        create_table_sql = database.db_operation.SQL_CREATE_GATEWAYNODE_TABLE)
             database.sqlite.create_table(connection = db_connection,
-                                create_table_sql = database.db_operation.SQL_CREATE_SENSORNODES_TABLE)
+                                        create_table_sql = database.db_operation.SQL_CREATE_SENSORNODES_INFO_TABLE)
             database.sqlite.create_table(connection = db_connection,
-                                create_table_sql = database.db_operation.SQL_CREATE_TEMPERATURE_1_TABLE)
+                                        create_table_sql = database.db_operation.SQL_CREATE_SENSORNODES_SENSORS_TABLE)
             database.sqlite.create_table(connection = db_connection,
-                                create_table_sql = database.db_operation.SQL_CREATE_TEMPERATURE_2_TABLE)
+                                        create_table_sql = database.db_operation.SQL_CREATE_SENSORNODES_SENSORS_DATA_TABLE)
     return None
 
 """ Functions
@@ -115,23 +115,20 @@ def radio_read(serial_object: serial.Serial):
                     continue
     return None
 
-def insert_temperatures_into_database(db_connection:database.sqlite.DbConnection, payload):
+def insert_temperatures_into_database(db_connection:database.sqlite.DbConnection, payload:radio.packages.ProtocolPayloadTemperature):
     # todo : fix sql injection
-    print("db  operation") 
-    if payload.sensor_nr == '1':
-        for sensorTemperature in payload.sensorTemperatureValues:
-            database.db_operation.insert_temperature_into_temperature1(connection = db_connection,
-                                                        measurement_temperature = (
-                                                            payload.timestampRtc,
-                                                            sensorTemperature.time_relative_to_reference,
-                                                            sensorTemperature.temperatureId,
-                                                            sensorTemperature.temperature))
-    if payload.sensor_nr == '2':
-        for sensorTemperature in payload.sensorTemperatureValues:
-            database.db_operation.insert_temperature_into_temperature2(connection = db_connection,
-                                                        measurement_temperature = (
-                                                            payload.timestampRtc,
-                                                            sensorTemperature.time_relative_to_reference,
-                                                            sensorTemperature.temperatureId,
-                                                            sensorTemperature.temperature))
-    return
+    print("db  operation")
+    #if payload.sensor_nr != None:
+    for sensorTemperature in payload.sensorTemperatureValues:
+        time_received_utc = timeutil.timeutil.get_time_utc()
+        sensor_timestamp_rtc = payload.timestampRtc + sensorTemperature.time_relative_to_reference
+        sensor_id = payload.sensor_nr
+        database.db_operation.insert_temperature_into_sensor_data(connection = db_connection,
+                                                    sensor_data = (
+                                                        time_received_utc,
+                                                        sensor_timestamp_rtc,
+                                                        sensorTemperature.temperatureId,
+                                                        10,
+                                                        sensor_id,
+                                                        sensorTemperature.temperature))
+    return None
