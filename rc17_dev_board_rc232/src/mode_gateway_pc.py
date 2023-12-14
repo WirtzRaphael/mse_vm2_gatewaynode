@@ -9,9 +9,11 @@ import schedule
 from schedule import every, repeat
 import serial
 import timeutil.timer
+import time
 
-SERIAL_PORT_RC_DEVBOAD = '/dev/ttyUSB1'
+SERIAL_PORT_RC_DEVBOAD = '/dev/ttyUSB2'
 DB_FILEPATH = r"gateway.db"
+
 
 """ Initialzation
 """
@@ -45,10 +47,32 @@ def init_db(db_file):
 
 """ Functions
 """
-def run_mode_gateway_pc():
-    schedule.run_pending()
-    return
+def run_mode_gateway_pc(operation_mode):
+    print("RUN pc mode \n")
+    #self.timer_repeated = None
+    #self.serial_rc = None
+    # initalization
+    serial_rc = init_serial(serial_port= SERIAL_PORT_RC_DEVBOAD)
+    init_db(DB_FILEPATH)
+    
+    # scheduling
+    #self.timer_repeated = timeutil.timer.RepeatedTimer(1,radio_read, serial_rc) # auto-starts
+    #schedule.every(1).seconds.do(radio_read, serial_rc) # sometimes conflict with serial port
+    #schedule.every().day.at("00:00").do(time_sync)
+    
+    while(operation_mode == 'gateway_pc'):
+        time.sleep(1)
+        radio_read(serial_rc)
+        #schedule.run_pending()
+        
 
+    print("EXIT pc mode")
+    deinit_serial(self.serial_rc)
+    #self.timer_repeated.stop()
+    
+    #radio_read(self.serial_rc)
+    return
+    
 @repeat(every(20).seconds, message = "write")
 @repeat(every(100).seconds, message = "check")
 def database_operation(message):
@@ -72,11 +96,10 @@ def radio_read(serial_object: serial.Serial):
         print(f"Serial communication error: {e}")
         
     received_payloads = list()
-    testlist = list()
     for package in received_packages: 
         payload = radio.packages.payload_readout(package)
         received_payloads.append(payload)
-        testlist.append("new value")
+
     
     print("db operation \n")
     with database.sqlite.DbConnection(DB_FILEPATH) as db_connection:
@@ -88,36 +111,18 @@ def radio_read(serial_object: serial.Serial):
             if received_payload.sensor_nr == '1':
                 for sensorTemperature in received_payload.sensorTemperatureValues:
                     database.db_operation.insert_temperature_into_temperature1(connection = db_connection,
-                                                                temperature = (
+                                                                measurement_temperature = (
                                                                     received_payload.timestampRtc,
+                                                                    sensorTemperature.time_relative_to_reference,
                                                                     sensorTemperature.temperatureId,
                                                                     sensorTemperature.temperature))
             if received_payload.sensor_nr == '2':
                 for sensorTemperature in received_payload.sensorTemperatureValues:
                     database.db_operation.insert_temperature_into_temperature2(connection = db_connection,
-                                                                temperature = (
+                                                                measurement_temperature = (
                                                                     received_payload.timestampRtc,
+                                                                    sensorTemperature.time_relative_to_reference,
                                                                     sensorTemperature.temperatureId,
                                                                     sensorTemperature.temperature))
-    return None 
-
-
-class mode_gateway_pc:
-    def __init__(self):
-        self.timer_repeated = None
-        self.serial_rc = None
-
-    def __enter__(self, *args, **kwargs):
-        print("RUN pc mode \n")
-        # initalization
-        serial_rc = init_serial(serial_port= SERIAL_PORT_RC_DEVBOAD)
-        init_db(DB_FILEPATH)
-        # scheduling
-        #self.timer_repeated = timeutil.timer.RepeatedTimer(1,radio_read, serial_rc) # auto-starts
-        schedule.every(1).seconds.do(radio_read, serial_rc)
-        schedule.every().day.at("00:00").do(time_sync)
-
-    def __exit__(self, *args):
-        print("EXIT pc mode")
-        deinit_serial(self.serial_rc)
-        self.timer_repeated.stop()
+            
+    return None
