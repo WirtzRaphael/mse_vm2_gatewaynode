@@ -1,7 +1,8 @@
 from datetime import timezone 
 import datetime 
 
-def get_time_utc():
+def get_time_unix_s():
+    # utc as unix timestamp
     utc_timestamp = 23;
     datetime_now = datetime.datetime.now()
     utc_time = datetime_now.replace(tzinfo=timezone.utc) 

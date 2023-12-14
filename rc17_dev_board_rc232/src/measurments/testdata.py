@@ -7,7 +7,7 @@ def get_test_string():
     
 def get_test_data_set_send():
     testset = []
-    time_now = timeutil.timeutil.get_time_utc()
+    time_now = timeutil.timeutil.get_time_unix()
     sample_rate = 1
     for i in range(1, 11):
         value_16bit = bin(random.randrange(65536))[2:].zfill(16)
