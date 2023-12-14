@@ -103,6 +103,7 @@ def radio_read(serial_object: serial.Serial):
     signal_strength_int = 0
     # RSSI - signal strength
     # fix : use received stream, package split could remove rssi value (;)
+    # bug (?) : value maybe lesser than in RcTools (compare to explicit function with cmd 'S')
     for package in received_packages[-1:]:
         # last elementl
         if len(package) > 3:
@@ -131,20 +132,22 @@ def radio_read(serial_object: serial.Serial):
                     continue
     return None
 
-def insert_temperatures_into_database(db_connection:database.sqlite.DbConnection, payload:radio.packages.ProtocolPayloadTemperature):
+def insert_temperatures_into_database(db_connection:database.sqlite.DbConnection, payload:radio.packages.ProtocolPayloadTemperature, signal_strength:int):
     # todo : fix sql injection
     print("db  operation")
     #if payload.sensor_nr != None:
     for sensorTemperature in payload.sensorTemperatureValues:
-        time_received_utc = timeutil.timeutil.get_time_utc()
+        # todo : limit unix time after coma
+        time_received_unix_s = timeutil.timeutil.get_time_unix_s()
         sensor_timestamp_rtc = payload.timestampRtc + sensorTemperature.time_relative_to_reference
         sensor_id = payload.sensor_nr
         database.db_operation.insert_temperature_into_sensor_data(connection = db_connection,
                                                     sensor_data = (
-                                                        time_received_utc,
+                                                        time_received_unix_s,
                                                         sensor_timestamp_rtc,
                                                         sensorTemperature.temperatureId,
                                                         10,
                                                         sensor_id,
+                                                        sensorTemperature.temperature, 
                                                         signal_strength))
     return None
