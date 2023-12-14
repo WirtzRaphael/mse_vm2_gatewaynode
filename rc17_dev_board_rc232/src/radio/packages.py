@@ -13,7 +13,12 @@ payload_descriptor = {
     'S': 'status'
 }
 
-class ProtocolPayload:
+class _PayloadContentInfo:
+    def __init__(self, descriptor, index):
+        self.descriptor = descriptor
+        self.index = index
+
+class ProtocolPayloadTemperature:
     def __init__(self, sensor_nr, timestampRtc) -> None:
         self.sensor_nr = sensor_nr
         self.timestampRtc = timestampRtc
@@ -42,22 +47,27 @@ def split_into_packages(package_stream):
     packet_list = package_stream.split(PACKAGE_END_CHAR)
     return packet_list
 
-def payload_readout(package) -> ProtocolPayload:
+def payload_readout(package):
     payload_content_list = package.split(PAYLOAD_SEPARATOR)
     # fix : magic number
     if payload_content_list == None or len(payload_content_list) <= 2:
         return
     
-    payload_index_start_temperature = _search_payload_descriptor(payload_content_list)
-    if payload_index_start_temperature == None:
+    payload_content_info = _determine_payload_content(payload_content_list)
+    if payload_content_info == None:
         return
     
-    payload = _payload_readout_temperature(payload_content_list, payload_index_start_temperature)
-    return payload
+    match payload_content_info.descriptor:
+        case 'T':
+            return _payload_readout_temperature(payload_content_list, payload_content_info.index)
+        case 'S':
+            return _payload_readout_status(payload_content_list, payload_content_info.index)
+        case _:
+            return None
 
 
-def _payload_readout_temperature(payload_list, payload_index_start_temperature):
-    payload = ProtocolPayload(
+def _payload_readout_temperature(payload_list, payload_index_start_temperature) -> ProtocolPayloadTemperature:
+    payload = ProtocolPayloadTemperature(
         timestampRtc=payload_list[payload_index_start_temperature + PAYLOAD_INDEX_TIMESTAMP_RTC],
         sensor_nr=payload_list[payload_index_start_temperature + PAYLOAD_INDEX_SENSOR_NR]
     )
@@ -73,16 +83,20 @@ def _payload_readout_temperature(payload_list, payload_index_start_temperature):
         pass # no content, avoid error
     return payload
 
-def _search_payload_descriptor(payload_list):
+def _payload_readout_status(payload_list, payload_index_start_status):
+    # todo : implement
+    pass
+
+def _determine_payload_content(payload_list) -> _PayloadContentInfo:
     for payload_descriptor_key in payload_descriptor.keys():
         try:
             payload_index = payload_list.index(payload_descriptor_key)
-            return payload_index
+            return _PayloadContentInfo(payload_descriptor_key, payload_index)
         except ValueError:
             # fix : line feed in payload
             try:
                 payload_index = payload_list.index(RC_232_PACKET_END_CHAR + payload_descriptor_key)
-                return payload_index
+                return _PayloadContentInfo(payload_descriptor_key, payload_index)
             except ValueError:
                 pass
     return None
