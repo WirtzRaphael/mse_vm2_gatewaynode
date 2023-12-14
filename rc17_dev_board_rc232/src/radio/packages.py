@@ -6,7 +6,7 @@ PAYLOAD_INDEX_TIMESTAMP_RTC = 1
 PAYLOAD_INDEX_SENSOR_NR = 2
 PAYLOAD_INDEX_SENSOR_TEMPERATURE = 3
 
-PAYLOAD_LENGTH_TEMPERATURE = 2
+PAYLOAD_LENGTH_TEMPERATURE = 3 # temperature, sensorId, time_relative_to_reference_rtc
 
 class ProtocolPayload:
     def __init__(self, sensor_nr, timestampRtc) -> None:
@@ -14,20 +14,22 @@ class ProtocolPayload:
         self.timestampRtc = timestampRtc
         self.sensorTemperatureValues = []
     
-    def add_payload_temperature(self, temperature, sensorId):
-        sensorTemperature = _PayloadTemperature(temperature, sensorId)
+    def add_payload_temperature(self, temperature, sensorId, time_relative_to_reference_rtc):
+        sensorTemperature = _PayloadTemperature(temperature, sensorId, time_relative_to_reference_rtc)
         self.sensorTemperatureValues.append(sensorTemperature)
 
     def print_payload(self):
         print("Payload: ")
         for sensorTemperature in self.sensorTemperatureValues:
             print("SensorId: ", sensorTemperature.temperatureId)
+            print("Relative Time: ", sensorTemperature.time_relative_to_reference)
             print("Temperature: ", sensorTemperature.temperature)
 
 class _PayloadTemperature:
-    def __init__(self, temperature, temperatureId):
+    def __init__(self, temperature, temperatureId, time_relative_to_reference_rtc):
         self.temperature = temperature
         self.temperatureId = temperatureId
+        self.time_relative_to_reference = time_relative_to_reference_rtc
 
 def split_into_packages(package_stream):
     if package_stream == "":
@@ -58,7 +60,7 @@ def payload_readout(package) -> ProtocolPayload:
         try:
             #print("payload_list 0: ", payload_list[x])
             #print("payload_list 1: ", payload_list[x+1])
-            payload.add_payload_temperature(payload_content_list[x], payload_content_list[x+1])
+            payload.add_payload_temperature(payload_content_list[x], payload_content_list[x+1], payload_content_list[x+2])
         except IndexError:
             # index out of bounds, corrupt or incomplete values
             pass
@@ -70,5 +72,4 @@ def print_package_received_sensor(package):
     print("temperature1 Id: ", package.temperatureId1)
     print("temperature2: ", package.temperature2)
     print("temperature2 Id: ", package.temperatureId2)
-
 
