@@ -1,5 +1,5 @@
-import db.sqlite
-import db.db_operation
+import database.sqlite
+import database.db_operation
 import radio.packages
 import rc232.testing
 import rc232.config
@@ -31,16 +31,16 @@ def deinit_serial(serial_object: serial.Serial):
     return None
 
 def init_db(db_file):
-    with db.sqlite.DbConnection(db_file) as db_connection:
+    with database.sqlite.DbConnection(db_file) as db_connection:
         if db_connection is not None:
-            db.sqlite.create_table(connection = db_connection,
-                                create_table_sql = db.db_operation.SQL_CREATE_GATEWAYNODE_TABLE)
-            db.sqlite.create_table(connection = db_connection,
-                                create_table_sql = db.db_operation.SQL_CREATE_SENSORNODES_TABLE)
-            db.sqlite.create_table(connection = db_connection,
-                                create_table_sql = db.db_operation.SQL_CREATE_TEMPERATURE_1_TABLE)
-            db.sqlite.create_table(connection = db_connection,
-                                create_table_sql = db.db_operation.SQL_CREATE_TEMPERATURE_2_TABLE)
+            database.sqlite.create_table(connection = db_connection,
+                                create_table_sql = database.db_operation.SQL_CREATE_GATEWAYNODE_TABLE)
+            database.sqlite.create_table(connection = db_connection,
+                                create_table_sql = database.db_operation.SQL_CREATE_SENSORNODES_TABLE)
+            database.sqlite.create_table(connection = db_connection,
+                                create_table_sql = database.db_operation.SQL_CREATE_TEMPERATURE_1_TABLE)
+            database.sqlite.create_table(connection = db_connection,
+                                create_table_sql = database.db_operation.SQL_CREATE_TEMPERATURE_2_TABLE)
     return None
 
 """ Functions
@@ -67,18 +67,26 @@ def radio_read(serial_object: serial.Serial):
         if received_packages == None:
             return None
         
-        received_payloads = []
-        for package in received_packages:
-            received_payloads.append(radio.packages.payload_readout(package))
-            pass
+        received_payloads = list()
+        for package in received_packages: 
+            payload = radio.packages.payload_readout(package)
+            received_payloads.append(payload)
         
-        with db.sqlite.DbConnection(DB_FILEPATH) as db_connection:
+        with database.sqlite.DbConnection(DB_FILEPATH) as db_connection:
             for received_payload in received_payloads:
                 if received_payload == None:
                     continue
+                # todo : fix sql injection
                 if received_payload.sensor_nr == '1':
                     for sensorTemperature in received_payload.sensorTemperatureValues:
-                        db.db_operation.insert_temperature_into_temperature1(connection = db_connection,
+                        database.db_operation.insert_temperature_into_temperature1(connection = db_connection,
+                                                                    temperature = (
+                                                                        received_payload.timestampRtc,
+                                                                        sensorTemperature.temperatureId,
+                                                                        sensorTemperature.temperature))
+                if received_payload.sensor_nr == '2':
+                    for sensorTemperature in received_payload.sensorTemperatureValues:
+                        database.db_operation.insert_temperature_into_temperature2(connection = db_connection,
                                                                     temperature = (
                                                                         received_payload.timestampRtc,
                                                                         sensorTemperature.temperatureId,
