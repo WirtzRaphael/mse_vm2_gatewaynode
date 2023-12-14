@@ -100,29 +100,38 @@ def radio_read(serial_object: serial.Serial):
         payload = radio.packages.payload_readout(package)
         received_payloads.append(payload)
 
-    
-    print("db operation \n")
     with database.sqlite.DbConnection(DB_FILEPATH) as db_connection:
         for received_payload in received_payloads:
             if received_payload == None:
-                continue
-            # todo : prefix char (t)
-            # todo : fix sql injection
-            if received_payload.sensor_nr == '1':
-                for sensorTemperature in received_payload.sensorTemperatureValues:
-                    database.db_operation.insert_temperature_into_temperature1(connection = db_connection,
-                                                                measurement_temperature = (
-                                                                    received_payload.timestampRtc,
-                                                                    sensorTemperature.time_relative_to_reference,
-                                                                    sensorTemperature.temperatureId,
-                                                                    sensorTemperature.temperature))
-            if received_payload.sensor_nr == '2':
-                for sensorTemperature in received_payload.sensorTemperatureValues:
-                    database.db_operation.insert_temperature_into_temperature2(connection = db_connection,
-                                                                measurement_temperature = (
-                                                                    received_payload.timestampRtc,
-                                                                    sensorTemperature.time_relative_to_reference,
-                                                                    sensorTemperature.temperatureId,
-                                                                    sensorTemperature.temperature))
-            
+                continue     
+            match received_payload:
+                case radio.packages.ProtocolPayloadTemperature():
+                    print("payload temperature")
+                    insert_temperatures_into_database(db_connection, received_payload)
+                case radio.packages.ProtocolPayloadStatus():
+                    print("payload status")
+                case _:
+                    print("payload unknown")
+                    continue
     return None
+
+def insert_temperatures_into_database(db_connection:database.sqlite.DbConnection, payload):
+    # todo : fix sql injection
+    print("db  operation") 
+    if payload.sensor_nr == '1':
+        for sensorTemperature in payload.sensorTemperatureValues:
+            database.db_operation.insert_temperature_into_temperature1(connection = db_connection,
+                                                        measurement_temperature = (
+                                                            payload.timestampRtc,
+                                                            sensorTemperature.time_relative_to_reference,
+                                                            sensorTemperature.temperatureId,
+                                                            sensorTemperature.temperature))
+    if payload.sensor_nr == '2':
+        for sensorTemperature in payload.sensorTemperatureValues:
+            database.db_operation.insert_temperature_into_temperature2(connection = db_connection,
+                                                        measurement_temperature = (
+                                                            payload.timestampRtc,
+                                                            sensorTemperature.time_relative_to_reference,
+                                                            sensorTemperature.temperatureId,
+                                                            sensorTemperature.temperature))
+    return
