@@ -8,6 +8,11 @@ PAYLOAD_INDEX_SENSOR_TEMPERATURE = 3
 
 PAYLOAD_LENGTH_TEMPERATURE = 3 # temperature, sensorId, time_relative_to_reference_rtc
 
+payload_descriptor = {
+    'T': 'temperature',
+    'S': 'status'
+}
+
 class ProtocolPayload:
     def __init__(self, sensor_nr, timestampRtc) -> None:
         self.sensor_nr = sensor_nr
@@ -42,30 +47,45 @@ def payload_readout(package) -> ProtocolPayload:
     # fix : magic number
     if payload_content_list == None or len(payload_content_list) <= 2:
         return
-    try:
-        payload_index_start_temperature = payload_content_list.index('T')
-    except ValueError:
-        # fix : Line Feed (LF) at payload start
-        try:
-            payload_index_start_temperature = payload_content_list.index('LFT')
-        except ValueError:
-            return None
     
+    payload_index_start_temperature = _search_payload_descriptor(payload_content_list)
+    if payload_index_start_temperature == None:
+        return
+    
+    payload = _payload_readout_temperature(payload_content_list, payload_index_start_temperature)
+    return payload
+
+
+def _payload_readout_temperature(payload_list, payload_index_start_temperature):
     payload = ProtocolPayload(
-        timestampRtc=payload_content_list[payload_index_start_temperature + PAYLOAD_INDEX_TIMESTAMP_RTC],
-        sensor_nr=payload_content_list[payload_index_start_temperature + PAYLOAD_INDEX_SENSOR_NR]
+        timestampRtc=payload_list[payload_index_start_temperature + PAYLOAD_INDEX_TIMESTAMP_RTC],
+        sensor_nr=payload_list[payload_index_start_temperature + PAYLOAD_INDEX_SENSOR_NR]
     )
     
-    for x in range(payload_index_start_temperature + PAYLOAD_INDEX_SENSOR_TEMPERATURE, len(payload_content_list), payload_index_start_temperature + PAYLOAD_LENGTH_TEMPERATURE):
+    for x in range(payload_index_start_temperature + PAYLOAD_INDEX_SENSOR_TEMPERATURE, len(payload_list), payload_index_start_temperature + PAYLOAD_LENGTH_TEMPERATURE):
         try:
             #print("payload_list 0: ", payload_list[x])
             #print("payload_list 1: ", payload_list[x+1])
-            payload.add_payload_temperature(payload_content_list[x], payload_content_list[x+1], payload_content_list[x+2])
+            payload.add_payload_temperature(payload_list[x], payload_list[x+1], payload_list[x+2])
         except IndexError:
             # index out of bounds, corrupt or incomplete values
             pass
         pass # no content, avoid error
     return payload
+
+def _search_payload_descriptor(payload_list):
+    for payload_descriptor_key in payload_descriptor.keys():
+        try:
+            payload_index = payload_list.index(payload_descriptor_key)
+            return payload_index
+        except ValueError:
+            # fix : line feed in payload
+            try:
+                payload_index = payload_list.index(RC_232_PACKET_END_CHAR + payload_descriptor_key)
+                return payload_index
+            except ValueError:
+                pass
+    return None
 
 def print_package_received_sensor(package):
     print("temperature1: ", package.temperature1)
