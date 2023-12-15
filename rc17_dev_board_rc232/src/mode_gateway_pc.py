@@ -11,7 +11,6 @@ import serial
 import timeutil.timer
 import time
 
-SERIAL_PORT_RC_DEVBOAD = '/dev/ttyUSB2'
 DB_FILEPATH = r"gateway.db"
 
 
@@ -47,12 +46,12 @@ def init_db(db_file):
 
 """ Functions
 """
-def run_mode_gateway_pc(operation_mode):
+def run_mode_gateway_pc(operation_mode, rc_usb_port:serial):
     print("RUN pc mode \n")
     #self.timer_repeated = None
     #self.serial_rc = None
     # initalization
-    serial_rc = init_serial(serial_port= SERIAL_PORT_RC_DEVBOAD)
+    serial_rc = init_serial(serial_port= rc_usb_port)
     init_db(DB_FILEPATH)
     
     # scheduling

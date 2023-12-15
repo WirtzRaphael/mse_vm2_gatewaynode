@@ -1,16 +1,23 @@
+import sys
 import mode_gateway_pc
 import mode_performance_testing
+
+# param
+#OPERATION_MODE = sys.argv[1] # gateway_pc, gateway_pi4, performance_testing 
+#SERIAL_PORT_RC_DEVBOAD = sys.argv[2] # '/dev/ttyUSB0'
+
+# default
+OPERATION_MODE = 'gateway_pc' 
+SERIAL_PORT_RC_DEVBOAD = '/dev/ttyUSB0'
 
 def run_mode_gateway_pi4():
     return
 
-operation_mode = 'gateway_pc'
-
 if __name__ == "__main__":
     while(True):
-        match operation_mode:
+        match OPERATION_MODE:
             case 'gateway_pc':
-                mode_gateway_pc.run_mode_gateway_pc(operation_mode)
+                mode_gateway_pc.run_mode_gateway_pc(OPERATION_MODE, SERIAL_PORT_RC_DEVBOAD)
             case 'gateway_pi4':
                 print("MODE: raspberry pi \n")
                 run_mode_gateway_pi4()
