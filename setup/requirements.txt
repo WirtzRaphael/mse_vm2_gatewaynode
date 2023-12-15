@@ -1,0 +1,4 @@
+
+# aiosqlite >= 0.18.0
+pyserial >= 3.5
+schedule >=1.2.0
