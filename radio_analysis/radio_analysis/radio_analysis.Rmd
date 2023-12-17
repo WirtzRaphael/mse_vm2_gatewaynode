@@ -1,0 +1,72 @@
+---
+title: "Radio analysis"
+output: html_document
+date: "2023-12-21"
+---
+```{r}
+#install.packages("RSQLite")
+```
+# Pre-settings 
+**Libraries**
+```{r}
+library(DBI)
+```
+
+**Environment**
+```{r}
+rm(list=ls())
+setwd(getwd())
+```
+
+# Data source
+```{r}
+db_info <- list(
+  filename = "20231216_p2p_hslu.db"
+)
+db_info$path = file.path("raw", db_info$filename)
+
+db_con <- dbConnect(RSQLite::SQLite(), db_info$path)
+
+db_tables <- list(
+  sensor_data = "sensornodes_sensor_data"
+)
+
+# merge
+db <- list(con = db_con, info = db_info, tables = db_tables)
+rm(db_con, db_info, db_tables)
+```
+
+## Extract raw data
+```{r}
+dbListTables(db$con)
+dbListFields(db$con, db$tables$sensor_data)
+```
+
+```{r}
+
+sensornode_10 <- list()
+# temperature 1
+res <- dbSendQuery(db$con, "SELECT * FROM sensornodes_sensor_data WHERE sensor_id = 1 AND sensornode_id")
+sensornode_10$temperature_1  <- dbFetch(res)
+dbClearResult(res)
+# temperature 1
+res <- dbSendQuery(db$con, "SELECT * FROM sensornodes_sensor_data WHERE sensor_id = 2 AND sensornode_id")
+sensornode_10$temperature_2  <- dbFetch(res)
+dbClearResult(res)
+```
+
+```{r}
+dbDisconnect(db$con)
+```
+
+# Analysis
+
+```{r}
+
+```
+
+ 
+
+
+
+
