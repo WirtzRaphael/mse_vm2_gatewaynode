@@ -3,22 +3,38 @@ title: "Radio analysis"
 output: html_document
 date: "2023-12-21"
 ---
+
 ```{r}
 #install.packages("RSQLite")
+#install.packages("anytime")
 ```
-# Pre-settings 
+
+# Pre-settings
+
 **Libraries**
+
 ```{r}
 library(DBI)
+library(anytime)
+library(dplyr)
 ```
 
 **Environment**
+
 ```{r}
 rm(list=ls())
 setwd(getwd())
 ```
 
+# Measurment
+```{r}
+gateway <- list()
+gateway$locaiton = "Druckerraum"
+```
+
+
 # Data source
+
 ```{r}
 db_info <- list(
   filename = "20231216_p2p_hslu.db"
@@ -37,21 +53,23 @@ rm(db_con, db_info, db_tables)
 ```
 
 ## Extract raw data
+
 ```{r}
 dbListTables(db$con)
 dbListFields(db$con, db$tables$sensor_data)
 ```
 
 ```{r}
+received_data_raw <- list()
 
-sensornode_10 <- list()
+received_sensornode_10_raw <- list()
 # temperature 1
 res <- dbSendQuery(db$con, "SELECT * FROM sensornodes_sensor_data WHERE sensor_id = 1 AND sensornode_id")
-sensornode_10$temperature_1  <- dbFetch(res)
+received_sensornode_10_raw$temperature_1  <- dbFetch(res)
 dbClearResult(res)
 # temperature 1
 res <- dbSendQuery(db$con, "SELECT * FROM sensornodes_sensor_data WHERE sensor_id = 2 AND sensornode_id")
-sensornode_10$temperature_2  <- dbFetch(res)
+received_sensornode_10_raw$temperature_2  <- dbFetch(res)
 dbClearResult(res)
 ```
 
@@ -59,14 +77,168 @@ dbClearResult(res)
 dbDisconnect(db$con)
 ```
 
+# Modify
+```{r}
+df_temperature_1 <- received_sensornode_10_raw$temperature_1
+```
+
+
+**Time conversion**
+```{r include=FALSe} 
+df_temperature_1$time_receive_cet <-
+  as.POSIXct(df_temperature_1$time_receive_unix_s, format = "%Y-%m-%d %H:%M:%S", tz = "CET")
+```
+
+**Location Coordinates**
+```{r}
+locations <- data.frame(
+  location = character(),
+  latitude = numeric(),
+  longitude = numeric()
+)
+
+loc_1 <- data.frame(
+  location = "E542",
+  latitude = '47°00.8575',
+  longitude = '008°18.3218'
+)
+loc_2 <- data.frame(
+  location = "D302",
+  latitude = '47°00.8709',
+  longitude = '008°18.3424'
+)
+loc_3 <- data.frame(
+  location = "F3xx",
+  latitude = '47°00.8095',
+  longitude = '008°18.3389'
+)
+loc_4 <- data.frame(
+  location = "B332",
+  latitude = '47°00.8620',
+  longitude = '008°18.3812'
+)
+loc_5 <- data.frame(
+  location = "B200",
+  latitude = '47°00.8404',
+  longitude = '008°18.3415'
+)
+loc_6 <- data.frame(
+  location = "A4",
+  latitude = 'none',
+  longitude = 'none'
+)
+
+locations <- rbind(locations, loc_1, loc_2, loc_3, loc_4)
+rm(loc_1, loc_2, loc_3, loc_4, loc_5, loc_6)
+```
+
+```{r}
+# Create an empty data frame
+locations <- data.frame(
+  location = character(),
+  latitude = numeric(),
+  longitude = numeric()
+)
+
+# Add a location
+new_location <- data.frame(
+  location = "NewLocation",
+  latitude = '45.123',
+  longitude = '-75.456'
+)
+
+locations <- rbind(locations, new_location)
+
+# Print the updated data frame
+print(locations)
+
+```
+
+
+**Location time mapping**
+Map location to time
+```{r}
+df_temperature_1$location <- ""
+
+df_temperature_1 <- df_temperature_1 %>% 
+   mutate(location = ifelse(
+    between(
+      time_receive_cet, 
+      as.POSIXct("2023-12-16 14:35:00", tz = "CET"),
+      as.POSIXct("2023-12-16 14:40:00", tz = "CET")
+    ),
+    "Trakt 4 E542 1.OG",
+    ifelse(
+      between(
+        time_receive_cet, 
+        as.POSIXct("2023-12-16 15:00:00", tz = "CET"),
+        as.POSIXct("2023-12-16 15:15:30", tz = "CET")
+      ),
+      "Trakt 3 D302 EG",
+    ifelse(
+      between(
+        time_receive_cet, 
+        as.POSIXct("2023-12-16 15:17:00", tz = "CET"),
+        as.POSIXct("2023-12-16 15:41:00", tz = "CET")
+      ),
+      "Trakt 3 F3xx",
+    ifelse(
+      between(
+        time_receive_cet, 
+        as.POSIXct("2023-12-16 15:48:00", tz = "CET"),
+        as.POSIXct("2023-12-16 15:55:00", tz = "CET")
+      ),
+      "Trakt 3 B332",
+    ifelse(
+      between(
+        time_receive_cet, 
+        as.POSIXct("2023-12-16 15:57:00", tz = "CET"),
+        as.POSIXct("2023-12-16 16:18:00", tz = "CET")
+      ),
+      "Trakt 2 B200",
+    ifelse(
+      between(
+        time_receive_cet, 
+        as.POSIXct("2023-12-16 16:19:00", tz = "CET"),
+        as.POSIXct("2023-12-16 16:45:00", tz = "CET")
+      ),
+      "Trakt 1 A4",
+      "undefined"
+    ))))))) #ifelse close
+```
+
+
+
+**Create processed**
+```{r}
+received_sensornode_10_processed <- list()
+received_sensornode_10_processed$temperature_1 = df_temperature_1
+```
+
 # Analysis
 
 ```{r}
 
+
 ```
 
- 
+# Results
+## Temperature
+```{r}
+ggplot(received_sensornode_10_raw$temperature_1, aes(x = received_sensornode_10_raw$temperature_1$time_receive_cet,
+  y = received_sensornode_10_raw$temperature_1$sensor_value)) +
+  geom_line() +
+  geom_point() +
+  labs(x = "Time", y = "Values", title = "Time vs Values")
+```
+## Packet Reception Ratio
+
+$$
+\text { Packet Delivery Ratio } = \frac{\sum \text { Number of packet receive }}{\sum \text { Number of packet send }}
+$$
 
 
+## Geolocation
+- distance ?
 
 
