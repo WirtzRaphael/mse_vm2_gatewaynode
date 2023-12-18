@@ -225,6 +225,17 @@ ggplot(received_sensornode_10_raw$temperature_1, aes(x = received_sensornode_10_
 $$
 \text { Packet Delivery Ratio } = \frac{\sum \text { Number of packet receive }}{\sum \text { Number of packet send }}
 $$
+### Data per location
+```{r}
+data_locations <- list()
+data_locations$e542 <- filter(df_temperature_1, location == "Trakt 4 E542 1.OG")
+data_locations$b200 <- filter(df_temperature_1, location == "Trakt 2 B200")
+data_locations$f3xx <- filter(df_temperature_1, location == "Trakt 3 F3xx")
+data_locations$a4 <- filter(df_temperature_1, location == "Trakt 1 A4")
+data_locations$undefined <- filter(df_temperature_1, location == "undefined")
+
+summary(data_locations)
+```
 
 
 ## Geolocation
