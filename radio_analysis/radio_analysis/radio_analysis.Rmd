@@ -261,27 +261,18 @@ print(sf_coordinates)
 
 #epsg_lv03 = 4326
 epsg_lv95 = 2056
-locations_swiss <- st_transform(sf_coordinates, crs = epsg_lv95)
+locations$epsg205_lv95<- st_transform(sf_coordinates, crs = epsg_lv95)
 print(locations_swiss$geometry)
 ```
 
-
+**Plot GPS Location**
 ```{r}
+points <- vect(locations$epsg205_lv95$geometry)
+#locations2_swiss <- vect(matrix(c(2665902, 1207390), ncol = 2), crs = epsg_lv95)
+# Plot the point using terra
 
-```
-
-
-
-```{r}
-additional_points <- data.frame(
-  latitude = c(1207300, 51.5074),
-  longitude = c(2665850, -0.1278),
-  point_label = c("Point A", "Point B")
-)
 terra::plot(tif_crop)
-terra::points(c(2665902, 1207390), col = "red", pch = 16)
-terra::points(additional_points, col = "red", pch = 16)
-#points(additional_points$longitude, additional_points$latitude, col = "red", pch = 16)
+terra::points(points, col = "red", pch = 16, cex = 1.5)
 ```
 
 
