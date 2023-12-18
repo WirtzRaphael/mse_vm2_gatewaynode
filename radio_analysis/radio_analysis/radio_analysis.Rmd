@@ -100,39 +100,53 @@ df_temperature_1$time_receive_cet <-
 ```{r}
 locations <- data.frame(
   location_name = character(),
-  latitude = numeric(),
-  longitude = numeric()
+  gps_latitude = numeric(),
+  gps_longitude = numeric(),
+  map_latitude = numeric(),
+  map_longitude = numeric()
 )
 
 loc_1 <- data.frame(
   location_name = "E542",
-  latitude = '47°00.8575',
-  longitude = '008°18.3218'
+  gps_latitude = '47°00.8575',
+  gps_longitude = '008°18.3218',
+  map_latitude = 2665888.34,
+  map_longitude = 1207377.10
 )
 loc_2 <- data.frame(
   location_name = "D302",
-  latitude = '47°00.8709',
-  longitude = '008°18.3424'
+  gps_latitude = '47°00.8709',
+  gps_longitude = '008°18.3424',
+  map_latitude = 0,
+  map_longitude = 0
 )
 loc_3 <- data.frame(
   location_name = "F3xx",
-  latitude = '47°00.8095',
-  longitude = '008°18.3389'
+  gps_latitude = '47°00.8095',
+  gps_longitude = '008°18.3389',
+  map_latitude = 0,
+  map_longitude = 0
 )
 loc_4 <- data.frame(
   location_name = "B332",
-  latitude = '47°00.8620',
-  longitude = '008°18.3812'
+  gps_latitude = '47°00.8620',
+  gps_longitude = '008°18.3812',
+  map_latitude = 0,
+  map_longitude = 0
 )
 loc_5 <- data.frame(
   location_name = "B200",
-  latitude = '47°00.8404',
-  longitude = '008°18.3415'
+  gps_latitude = '47°00.8404',
+  gps_longitude = '008°18.3415',
+  map_latitude = 0,
+  map_longitude = 0
 )
 loc_6 <- data.frame(
   location_name = "A4",
-  latitude = 'none',
-  longitude = 'none'
+  gps_latitude = 'none',
+  gps_longitude = 'none',
+  map_latitude = 0,
+  map_longitude = 0
 )
 
 locations <- rbind(locations, loc_1, loc_2, loc_3, loc_4)
@@ -256,34 +270,47 @@ tif_crop <- terra::crop(tif_file, e)
 
 **Convert degree-minute DD°MM.mmmm to decimal degrees DD.dddd**
 ```{r}
-lat_degrees <- as.numeric(substring(locations$latitude, 1, 2)) # vor °
-lat_minutes <- as.numeric(substring(locations$latitude, 4)) # nach °
-locations$latitude_decdeg<- lat_degrees + lat_minutes / 60
-#print(locations$latitude_decdeg)
+lat_degrees <- as.numeric(substring(locations$gps_latitude, 1, 2)) # vor °
+lat_minutes <- as.numeric(substring(locations$gps_latitude, 4)) # nach °
+locations$gps_latitude_decdeg<- lat_degrees + lat_minutes / 60
+#print(locations$gps_latitude_decdeg)
 
-lon_degrees <- as.numeric(substring(locations$longitude, 1, 3)) # vor °
-lon_minutes <- as.numeric(substring(locations$longitude, 5)) # nach °
-locations$longitude_decdeg <- lon_degrees + lon_minutes / 60
-#print(locations$longitude_decdeg)
+lon_degrees <- as.numeric(substring(locations$gps_longitude, 1, 3)) # vor °
+lon_minutes <- as.numeric(substring(locations$gps_longitude, 5)) # nach °
+locations$gps_longitude_decdeg <- lon_degrees + lon_minutes / 60
+#print(locations$gps_longitude_decdeg)
 
+# coordinates wgs84 geometries
 epsg_wgs84 = 4326
-sf_coordinates <- st_as_sf(locations, coords = c("longitude_decdeg", "latitude_decdeg"), crs = epsg_wgs84) # 
-print(sf_coordinates)
+sf_coordinates_gps <- st_as_sf(locations, coords = c("gps_longitude_decdeg", "gps_latitude_decdeg"), crs = epsg_wgs84) 
+print(sf_coordinates_gps)
 
+# convert wgs84 to swiss format
 #epsg_lv03 = 4326
 epsg_lv95 = 2056
-locations$epsg205_lv95<- st_transform(sf_coordinates, crs = epsg_lv95)
-print(locations_swiss$geometry)
+locations$gps_epsg205_lv95 <- st_transform(sf_coordinates_gps, crs = epsg_lv95)
+print(locations$gps_epsg205_lv95)
+```
+```{r}
+sf_coordinates_map <- st_as_sf(locations, coords = c("map_longitude", "map_latitude"), crs = epsg_lv95)
+#print(sf_coordinates_map)
+
+locations$map_epsg205_lv95 <- st_transform(sf_coordinates_map, crs = epsg_lv95)
+print(locations$map_epsg205_lv95)
 ```
 
 **Plot GPS Location**
 ```{r}
-points <- vect(locations$epsg205_lv95$geometry)
+gps_points <- vect(locations$gps_epsg205_lv95$geometry)
+map_points <- vect(locations$map_epsg205_lv95$geometry)
+#map_points <- c(locations$map_latitude, locations$map_longitude)
 #locations2_swiss <- vect(matrix(c(2665902, 1207390), ncol = 2), crs = epsg_lv95)
 # Plot the point using terra
 
 terra::plot(tif_crop)
-terra::points(points, col = "red", pch = 16, cex = 1.5)
+terra::points(gps_points, col = "red", pch = 16, cex = 1.5)
+# todo : fixme
+#terra::points(map_points, col = "blue", pch = 16, cex = 1.5)
 ```
 
 
