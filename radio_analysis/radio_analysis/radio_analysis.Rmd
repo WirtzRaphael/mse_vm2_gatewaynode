@@ -7,6 +7,8 @@ date: "2023-12-21"
 ```{r}
 #install.packages("RSQLite")
 #install.packages("anytime")
+#install.packages("sf")
+#install.packages('osmdata')
 ```
 
 # Pre-settings
@@ -17,6 +19,11 @@ date: "2023-12-21"
 library(DBI)
 library(anytime)
 library(dplyr)
+
+library(sf)
+library(ggplot2)
+library(ggmap)
+library(osmdata)
 ```
 
 **Environment**
@@ -92,66 +99,45 @@ df_temperature_1$time_receive_cet <-
 **Location Coordinates**
 ```{r}
 locations <- data.frame(
-  location = character(),
+  location_name = character(),
   latitude = numeric(),
   longitude = numeric()
 )
 
 loc_1 <- data.frame(
-  location = "E542",
+  location_name = "E542",
   latitude = '47°00.8575',
   longitude = '008°18.3218'
 )
 loc_2 <- data.frame(
-  location = "D302",
+  location_name = "D302",
   latitude = '47°00.8709',
   longitude = '008°18.3424'
 )
 loc_3 <- data.frame(
-  location = "F3xx",
+  location_name = "F3xx",
   latitude = '47°00.8095',
   longitude = '008°18.3389'
 )
 loc_4 <- data.frame(
-  location = "B332",
+  location_name = "B332",
   latitude = '47°00.8620',
   longitude = '008°18.3812'
 )
 loc_5 <- data.frame(
-  location = "B200",
+  location_name = "B200",
   latitude = '47°00.8404',
   longitude = '008°18.3415'
 )
 loc_6 <- data.frame(
-  location = "A4",
+  location_name = "A4",
   latitude = 'none',
   longitude = 'none'
 )
 
 locations <- rbind(locations, loc_1, loc_2, loc_3, loc_4)
 rm(loc_1, loc_2, loc_3, loc_4, loc_5, loc_6)
-```
-
-```{r}
-# Create an empty data frame
-locations <- data.frame(
-  location = character(),
-  latitude = numeric(),
-  longitude = numeric()
-)
-
-# Add a location
-new_location <- data.frame(
-  location = "NewLocation",
-  latitude = '45.123',
-  longitude = '-75.456'
-)
-
-locations <- rbind(locations, new_location)
-
-# Print the updated data frame
 print(locations)
-
 ```
 
 
@@ -206,6 +192,9 @@ df_temperature_1 <- df_temperature_1 %>%
       "undefined"
     ))))))) #ifelse close
 ```
+```{r}
+```
+
 
 
 
@@ -239,6 +228,65 @@ $$
 
 
 ## Geolocation
-- distance ?
+- Quelle Karte : https://www.geo.lu.ch/meta?metauid=UP10FARB_DS
+  - Übersichtsplan 1:10'000 (UP10), farbig
+- https://www.rdocumentation.org/packages/terra/versions/1.5-21/topics/crop
+
+
+```{r}
+library(terra)
+
+tif_file <- terra::rast("UP10FARB_V1_RAS_T11504.tif")
+e <- terra::ext(-5, 5, -5, 5)
+e <- ext(2665820, 2666050, 1207200, 1207500)
+tif_crop <- terra::crop(tif_file, e)
+#plot(tif_crop)
+```
+
+**Convert degree-minute DD°MM.mmmm to decimal degrees DD.dddd**
+```{r}
+lat_degrees <- as.numeric(substring(locations$latitude, 1, 2)) # vor °
+lat_minutes <- as.numeric(substring(locations$latitude, 4)) # nach °
+locations$latitude_decdeg<- lat_degrees + lat_minutes / 60
+#print(locations$latitude_decdeg)
+
+lon_degrees <- as.numeric(substring(locations$longitude, 1, 3)) # vor °
+lon_minutes <- as.numeric(substring(locations$longitude, 5)) # nach °
+locations$longitude_decdeg <- lon_degrees + lon_minutes / 60
+#print(locations$longitude_decdeg)
+
+epsg_wgs84 = 4326
+sf_coordinates <- st_as_sf(locations, coords = c("longitude_decdeg", "latitude_decdeg"), crs = epsg_wgs84) # 
+print(sf_coordinates)
+
+#epsg_lv03 = 4326
+epsg_lv95 = 2056
+locations_swiss <- st_transform(sf_coordinates, crs = epsg_lv95)
+print(locations_swiss$geometry)
+```
+
+
+```{r}
+
+```
+
+
+
+```{r}
+additional_points <- data.frame(
+  latitude = c(1207300, 51.5074),
+  longitude = c(2665850, -0.1278),
+  point_label = c("Point A", "Point B")
+)
+terra::plot(tif_crop)
+terra::points(c(2665902, 1207390), col = "red", pch = 16)
+terra::points(additional_points, col = "red", pch = 16)
+#points(additional_points$longitude, additional_points$latitude, col = "red", pch = 16)
+```
+
+
+
+
+
 
 
