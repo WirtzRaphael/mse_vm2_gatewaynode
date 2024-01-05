@@ -67,16 +67,14 @@ dbListFields(db$con, db$tables$sensor_data)
 ```
 
 ```{r}
-received_data_raw <- list()
-
-received_sensornode_10_raw <- list()
+sensornode_10_raw <- list()
 # temperature 1
 res <- dbSendQuery(db$con, "SELECT * FROM sensornodes_sensor_data WHERE sensor_id = 1 AND sensornode_id")
-received_sensornode_10_raw$temperature_1  <- dbFetch(res)
+sensornode_10_raw$temperature_1  <- dbFetch(res)
 dbClearResult(res)
 # temperature 1
 res <- dbSendQuery(db$con, "SELECT * FROM sensornodes_sensor_data WHERE sensor_id = 2 AND sensornode_id")
-received_sensornode_10_raw$temperature_2  <- dbFetch(res)
+sensornode_10_raw$temperature_2  <- dbFetch(res)
 dbClearResult(res)
 ```
 
@@ -86,15 +84,33 @@ dbDisconnect(db$con)
 
 # Modify
 ```{r}
-df_temperature_1 <- received_sensornode_10_raw$temperature_1
+node_10_temperature_1 <- sensornode_10_raw$temperature_1
+node_10_temperature_1$sensor_type <- "Temperature 1"
+
+node_10_temperature_2 <- sensornode_10_raw$temperature_2
+node_10_temperature_2$sensor_type <- "Temperature 2"
 ```
 
+**Time addition**
+```{r}
+node_10_temperature_1$time_unix_s <- 
+  sensornode_10_raw$temperature_1$time_receive_unix_s + 
+  sensornode_10_raw$temperature_1$time_rtc_s
+
+node_10_temperature_2$time_unix_s <- 
+  sensornode_10_raw$temperature_2$time_receive_unix_s + 
+  sensornode_10_raw$temperature_2$time_rtc_s
+```
 
 **Time conversion**
 ```{r include=FALSe} 
-df_temperature_1$time_receive_cet <-
-  as.POSIXct(df_temperature_1$time_receive_unix_s, format = "%Y-%m-%d %H:%M:%S", tz = "CET")
+node_10_temperature_1$time_cet <-
+  as.POSIXct(node_10_temperature_1$time_receive_unix_s, format = "%Y-%m-%d %H:%M:%S", tz = "CET")
+
+node_10_temperature_2$time_cet<-
+  as.POSIXct(node_10_temperature_2$time_receive_unix_s, format = "%Y-%m-%d %H:%M:%S", tz = "CET")
 ```
+
 
 **Location Coordinates**
 ```{r}
@@ -155,50 +171,50 @@ print(locations)
 ```
 
 
-**Location time mapping**
+## Location time mapping
+### temperature 1
 Map location to time
 ```{r}
-df_temperature_1$location <- ""
-
-df_temperature_1 <- df_temperature_1 %>% 
+node_10_temperature_1$location <- ""
+node_10_temperature_1 <- node_10_temperature_1 %>% 
    mutate(location = ifelse(
     between(
-      time_receive_cet, 
+      time_cet, 
       as.POSIXct("2023-12-16 14:35:00", tz = "CET"),
       as.POSIXct("2023-12-16 14:40:00", tz = "CET")
     ),
     "Trakt 4 E542 1.OG",
     ifelse(
       between(
-        time_receive_cet, 
+        time_cet, 
         as.POSIXct("2023-12-16 15:00:00", tz = "CET"),
         as.POSIXct("2023-12-16 15:15:30", tz = "CET")
       ),
       "Trakt 3 D302 EG",
     ifelse(
       between(
-        time_receive_cet, 
+        time_cet, 
         as.POSIXct("2023-12-16 15:17:00", tz = "CET"),
         as.POSIXct("2023-12-16 15:41:00", tz = "CET")
       ),
       "Trakt 3 F3xx",
     ifelse(
       between(
-        time_receive_cet, 
+        time_cet, 
         as.POSIXct("2023-12-16 15:48:00", tz = "CET"),
         as.POSIXct("2023-12-16 15:55:00", tz = "CET")
       ),
       "Trakt 3 B332",
     ifelse(
       between(
-        time_receive_cet, 
+        time_cet, 
         as.POSIXct("2023-12-16 15:57:00", tz = "CET"),
         as.POSIXct("2023-12-16 16:18:00", tz = "CET")
       ),
       "Trakt 2 B200",
     ifelse(
       between(
-        time_receive_cet, 
+        time_cet, 
         as.POSIXct("2023-12-16 16:19:00", tz = "CET"),
         as.POSIXct("2023-12-16 16:45:00", tz = "CET")
       ),
@@ -206,51 +222,410 @@ df_temperature_1 <- df_temperature_1 %>%
       "undefined"
     ))))))) #ifelse close
 ```
+### temperature 2
 ```{r}
-```
-
-
-
-
-**Create processed**
-```{r}
-received_sensornode_10_processed <- list()
-received_sensornode_10_processed$temperature_1 = df_temperature_1
+node_10_temperature_2$location <- ""
+node_10_temperature_2 <- node_10_temperature_2 %>%
+   mutate(location = ifelse(
+    between(
+      time_cet, 
+      as.POSIXct("2023-12-16 14:35:00", tz = "CET"),
+      as.POSIXct("2023-12-16 14:40:00", tz = "CET")
+    ),
+    "Trakt 4 E542 1.OG",
+    ifelse(
+      between(
+        time_cet, 
+        as.POSIXct("2023-12-16 15:00:00", tz = "CET"),
+        as.POSIXct("2023-12-16 15:15:30", tz = "CET")
+      ),
+      "Trakt 3 D302 EG",
+    ifelse(
+      between(
+        time_cet, 
+        as.POSIXct("2023-12-16 15:17:00", tz = "CET"),
+        as.POSIXct("2023-12-16 15:41:00", tz = "CET")
+      ),
+      "Trakt 3 F3xx",
+    ifelse(
+      between(
+        time_cet, 
+        as.POSIXct("2023-12-16 15:48:00", tz = "CET"),
+        as.POSIXct("2023-12-16 15:55:00", tz = "CET")
+      ),
+      "Trakt 3 B332",
+    ifelse(
+      between(
+        time_cet, 
+        as.POSIXct("2023-12-16 15:57:00", tz = "CET"),
+        as.POSIXct("2023-12-16 16:18:00", tz = "CET")
+      ),
+      "Trakt 2 B200",
+    ifelse(
+      between(
+        time_cet, 
+        as.POSIXct("2023-12-16 16:19:00", tz = "CET"),
+        as.POSIXct("2023-12-16 16:45:00", tz = "CET")
+      ),
+      "Trakt 1 A4",
+      "undefined"
+    ))))))) #ifelse close
 ```
 
 # Analysis
-
+**Adjust time range of measuremnts**
 ```{r}
+# Combine both datasets
+combined_data_tmp <- rbind(node_10_temperature_1, node_10_temperature_2)
 
-
+## filter: outlayers
+combined_data <- combined_data_tmp[
+  combined_data_tmp$time_cet <= as.POSIXct("2023-12-16 16:19:00", tz = "CET"),
+]
 ```
-
-# Results
+**Measurment separators**
+```{r}
+locations_time_separation <- c (
+  as.POSIXct("2023-12-16 14:35:00", tz = "CET"), 
+  as.POSIXct("2023-12-16 15:00:00", tz = "CET"),
+  as.POSIXct("2023-12-16 15:27:00", tz = "CET"),
+  as.POSIXct("2023-12-16 15:48:00", tz = "CET"),
+  as.POSIXct("2023-12-16 15:57:00", tz = "CET")
+#  as.POSIXct("2023-12-16 16:19:00", tz = "CET")
+)
+```
 ## Temperature
 ```{r}
-ggplot(received_sensornode_10_raw$temperature_1, aes(x = received_sensornode_10_raw$temperature_1$time_receive_cet,
-  y = received_sensornode_10_raw$temperature_1$sensor_value)) +
-  geom_line() +
+library(lubridate)
+# Create a plot for both datasets
+x_offset = 0.1
+y_offset_min = 2
+tmp_middle = median(combined_data$sensor_value) + 0.1
+
+
+results_plots_nodes_values <- ggplot(combined_data, aes(x = time_cet, y = sensor_value, color = sensor_type)) +
   geom_point() +
-  labs(x = "Time", y = "Values", title = "Time vs Values")
+  geom_vline(xintercept = locations_time_separation, 
+    linetype="dotted") +
+  annotate("text", x = locations_time_separation[1] - minutes(2), y = tmp_middle, label = "E542", angle = 90) +
+  annotate("text", x = locations_time_separation[2] - minutes(2), y = tmp_middle, label = "D302", angle = 90) +
+  annotate("text", x = locations_time_separation[3] - minutes(2), y = tmp_middle, label = "F3xx", angle = 90) +
+  annotate("text", x = locations_time_separation[4] - minutes(2), y = tmp_middle, label = "B332", angle = 90) +
+  annotate("text", x = locations_time_separation[5] - minutes(2), y = tmp_middle, label = "A4", angle = 90) +
+  labs(x = "Uhrzeit", y = "Temperature [°C]"
+    #, title = "Zeit vs Temperatur"
+    ) +
+  labs(color = "Sensornr.") +
+  theme(legend.position = "bottom")
+results_plots_nodes_values
 ```
+
+## Split data per location
+```{r}
+locations_data <- list()
+locations_data$e542 <- filter(node_10_temperature_1, location == "Trakt 4 E542 1.OG")
+locations_data$b200 <- filter(node_10_temperature_1, location == "Trakt 2 B200")
+locations_data$f3xx <- filter(node_10_temperature_1, location == "Trakt 3 F3xx")
+locations_data$a4 <- filter(node_10_temperature_1, location == "Trakt 1 A4")
+locations_data$undefined <- filter(node_10_temperature_1, location == "undefined")
+
+summary(locations_data)
+```
+
 ## Packet Reception Ratio
 
 $$
 \text { Packet Delivery Ratio } = \frac{\sum \text { Number of packet receive }}{\sum \text { Number of packet send }}
 $$
-### Data per location
-```{r}
-data_locations <- list()
-data_locations$e542 <- filter(df_temperature_1, location == "Trakt 4 E542 1.OG")
-data_locations$b200 <- filter(df_temperature_1, location == "Trakt 2 B200")
-data_locations$f3xx <- filter(df_temperature_1, location == "Trakt 3 F3xx")
-data_locations$a4 <- filter(df_temperature_1, location == "Trakt 1 A4")
-data_locations$undefined <- filter(df_temperature_1, location == "undefined")
 
-summary(data_locations)
+```{r}
+locations_results <- list()
+locations_results$e542 <- ""
+locations_results$b200 <- ""
+locations_results$f3xx<- ""
+locations_results$a4 <- ""
+locations_results$undefined <- ""
 ```
 
+```{r}
+number_received = length(locations_data$e542$measure_nr)
+number_total = max(locations_data$e542$measure_nr) - min (locations_data$e542$measure_nr) + 1
+locations_results$e542$pdf = number_received / number_total
+locations_results$e542$pdf
+#
+number_received = length(locations_data$b200$measure_nr)
+number_total = max(locations_data$b200$measure_nr) - min (locations_data$b200$measure_nr) + 1
+locations_results$b200$pdf = number_received / number_total
+locations_results$b200$pdf
+#
+number_received = length(locations_data$f3xx$measure_nr)
+number_total = max(locations_data$f3xx$measure_nr) - min (locations_data$f3xx$measure_nr) + 1
+locations_results$f3xx$pdf = number_received / number_total
+locations_results$f3xx$pdf
+#
+number_received = length(locations_data$a4$measure_nr)
+number_total = max(locations_data$a4$measure_nr) - min (locations_data$a4$measure_nr) + 1
+locations_results$a4$pdf = number_received / number_total
+locations_results$a4$pdf
+#
+number_received = length(locations_data$undef$measure_nr)
+number_total = max(locations_data$undef$measure_nr) - min (locations_data$undef$measure_nr) + 1
+locations_results$undef$pdf = number_received / number_total
+locations_results$undef$pdf
+```
+**Problem**
+Fehler bei measure_nr, kann nicht verwendet werden.
+
+## Differences with plots
+```{r}
+globvar <- list()
+globvar$temperature_time_sample_s = 5
+globvar$temperature_time_sample_upper_s = 6
+globvar$temperature_time_sample_threshold_s = 10
+```
+
+
+**E542**
+```{r}
+time_sample_s = globvar$temperature_time_sample_s
+#time_sample_upper_s = globvar$temperature_time_sample_upper_s
+time_sample_threshold_s = globvar$temperature_time_sample_threshold_s
+
+i <- 2
+i_max <- length(locations_data$e542$id)
+locations_data$e542$time_diffs <- c()
+while (i <= i_max) {
+  locations_data$e542$time_diffs[i-1] = 
+    locations_data$e542$time_rtc_s[i] - 
+    locations_data$e542$time_rtc_s[i-1]
+  #print(i)
+  i <- i + 1
+}
+locations_data$e542$time_diffs
+
+df <- data.frame(Index = 1:length(locations_data$e542$time_diffs), Value = locations_data$e542$time_diffs)
+
+# plot: Line plot
+results_e542_plot_line <- ggplot(df, aes(x = Index, y = Value)) +
+  geom_point() +
+  geom_line(linetype = "dotted", color = "darkgrey") +
+  geom_hline(yintercept = time_sample_s, linetype="dotted", color="red") +
+#  geom_hline(yintercept = time_sample_upper_s, linetype="dotted", color="red") +
+  geom_hline(yintercept = time_sample_threshold_s, linetype="dashed", color="red") +
+#  ggtitle("Line Plot of Data") +
+  xlab("Index") +
+ylab("Zeitdifferenz [s]")
+
+# plot: Boxplot
+df <- data.frame(Value = locations_data$e542$time_diffs)
+
+results_e542_plot_box <- ggplot(df, aes(y = Value)) +
+  geom_boxplot() +
+ #  ggtitle("Boxplot of Data") +
+  ylab("Zeitdifferenz [s]") +
+  xlab("") # fix: same plot heigths
+
+results_e542_plot_line
+results_e542_plot_box
+```
+**B200**
+```{r}
+time_sample_s = globvar$temperature_time_sample_s
+#time_sample_upper_s = globvar$temperature_time_sample_upper_s
+time_sample_threshold_s = globvar$temperature_time_sample_threshold_s
+
+i <- 2
+i_max <- length(locations_data$b200$id)
+locations_data$b200$time_diffs <- c()
+while (i <= i_max) {
+  locations_data$b200$time_diffs[i-1] = 
+    locations_data$b200$time_rtc_s[i] - 
+    locations_data$b200$time_rtc_s[i-1]
+  #print(i)
+  i <- i + 1
+}
+locations_data$b200$time_diffs
+
+df <- data.frame(Index = 1:length(locations_data$b200$time_diffs),
+  Value = locations_data$b200$time_diffs)
+
+# plot: Line plot
+results_b200_plot_line <- ggplot(df, aes(x = Index, y = Value)) +
+  geom_point(size = 0.75) +
+  geom_line(linetype = "dotted", color = "darkgrey") + 
+  geom_hline(yintercept = time_sample_s, linetype="dotted", color="red") +
+#  geom_hline(yintercept = time_sample_upper_s, linetype="dotted", color="red") +
+  geom_hline(yintercept = time_sample_threshold_s, linetype="dashed", color="red") +
+#  ggtitle("Line Plot of Data") +
+  xlab("Index") +
+  ylab("Zeitdifferenz [s]")
+
+# plot: Boxplot
+df <- data.frame(Value = locations_data$b200$time_diffs)
+
+results_b200_plot_box <- ggplot(df, aes(y = Value)) +
+  geom_boxplot() +
+ #  ggtitle("Boxplot of Data") +
+  ylab("Zeitdifferenz [s]")
+
+results_b200_plot_line
+results_b200_plot_box
+```
+**F3xx**
+```{r}
+time_sample_s = globvar$temperature_time_sample_s
+#time_sample_upper_s = globvar$temperature_time_sample_upper_s
+time_sample_threshold_s = globvar$temperature_time_sample_threshold_s
+
+i <- 2
+i_max <- length(locations_data$f3xx$id)
+locations_data$f3xx$time_diffs <- c()
+while (i <= i_max) {
+  locations_data$f3xx$time_diffs[i-1] = 
+    locations_data$f3xx$time_rtc_s[i] - 
+    locations_data$f3xx$time_rtc_s[i-1]
+  #print(i)
+  i <- i + 1
+}
+locations_data$f3xx$time_diffs
+
+df <- data.frame(Index = 1:length(locations_data$f3xx$time_diffs), Value = locations_data$f3xx$time_diffs)
+
+# plot: Line plot
+results_f3xx_plot_line <- ggplot(df, aes(x = Index, y = Value)) +
+#  geom_point() +
+  geom_line(linetype = "solid", color = "black") + 
+  geom_hline(yintercept = time_sample_s, linetype="dotted", color="red") +
+#  geom_hline(yintercept = time_sample_upper_s, linetype="dotted", color="red") +
+  geom_hline(yintercept = time_sample_threshold_s, linetype="dashed", color="red") +
+#  ggtitle("Line Plot of Data") +
+  xlab("Index") +
+  ylab("Zeitdifferenz [s]")
+
+# plot: Boxplot
+df <- data.frame(Value = locations_data$f3xx$time_diffs)
+
+results_f3xx_plot_box <- ggplot(df, aes(y = Value)) +
+  geom_boxplot() +
+ #  ggtitle("Boxplot of Data") +
+  ylab("Zeitdifferenz [s]")
+
+## filter: outlayers
+locations_results$f3xx$time_diffs_filter <- 
+  locations_data$f3xx$time_diffs[
+    locations_data$f3xx$time_diffs <= time_sample_threshold_s
+]
+
+diffs_filter = locations_results$f3xx$time_diffs_filter
+
+df <- data.frame(Index = 1:length(diffs_filter), Value = diffs_filter)
+
+# plot: Line plot
+results_f3xx_plot_line_filtered <- ggplot(df, aes(x = Index, y = Value)) +
+  geom_point() +
+  geom_line(linetype = "dotted", color = "darkgrey") + 
+  geom_hline(yintercept = time_sample_s, linetype="dotted", color="red") +
+#  geom_hline(yintercept = time_sample_upper_s, linetype="dotted", color="red") +
+  geom_hline(yintercept = time_sample_threshold_s, linetype="dashed", color="red") +
+#  ggtitle("Line Plot of Data") +
+  xlab("Index") +
+  ylab("Zeitdifferenz [s]")
+
+# plot: Boxplot
+df <- data.frame(Value = diffs_filter)
+
+results_f3xx_plot_box_filtered <- ggplot(df, aes(y = Value)) +
+  geom_boxplot() +
+ #  ggtitle("Boxplot of Data") +
+  ylab("Zeitdifferenz [s]")
+
+results_f3xx_plot_line
+results_f3xx_plot_box
+results_f3xx_plot_line_filtered
+results_f3xx_plot_box_filtered
+```
+**A4**
+```{r}
+time_sample_s = globvar$temperature_time_sample_s
+#time_sample_upper_s = globvar$temperature_time_sample_upper_s
+time_sample_threshold_s = globvar$temperature_time_sample_threshold_s
+
+i <- 2
+i_max <- length(locations_data$a4$id)
+locations_data$a4$time_diffs <- c()
+while (i <= i_max) {
+  locations_data$a4$time_diffs[i-1] = 
+    locations_data$a4$time_rtc_s[i] - 
+    locations_data$a4$time_rtc_s[i-1]
+  #print(i)
+  i <- i + 1
+}
+locations_data$a4$time_diffs
+
+# filter high values
+locations_results$a4$time_diffs_filter <- locations_data$a4$time_diffs[
+  locations_data$a4$time_diffs >= -1000 &
+  locations_data$a4$time_diffs <= 1000
+]
+
+diffs_filter = locations_results$a4$time_diffs_filter
+
+df <- data.frame(Index = 1:length(diffs_filter), Value = diffs_filter)
+
+# plot: Line plot
+results_a4_plot_line <- ggplot(df, aes(x = Index, y = Value)) +
+#  geom_point() +
+  geom_line(linetype = "solid", color = "black") + 
+  geom_hline(yintercept = time_sample_s, linetype="dotted", color="red") +
+#  geom_hline(yintercept = time_sample_upper_s, linetype="dotted", color="red") +
+  geom_hline(yintercept = time_sample_threshold_s, linetype="dashed", color="red") +
+#  ggtitle("Line Plot of Data") +
+  xlab("Index") +
+  ylab("Zeitdifferenz [s]")
+
+# plot: Boxplot
+df <- data.frame(Value = diffs_filter)
+
+results_a4_plot_box <- ggplot(df, aes(y = Value)) +
+  geom_boxplot() +
+ #  ggtitle("Boxplot of Data") +
+  ylab("Zeitdifferenz [s]")
+
+## filter: outlayers
+locations_results$a4$time_diffs_filter2 <- 
+  locations_data$a4$time_diffs[
+      locations_data$a4$time_diffs >= -1000 &
+    locations_data$a4$time_diffs <= 1000 &
+    locations_data$a4$time_diffs <= time_sample_threshold_s
+]
+diffs_filter2 = locations_results$a4$time_diffs_filter2
+
+df <- data.frame(Index = 1:length(diffs_filter2), Value = diffs_filter2)
+
+# plot: Line plot
+results_a4_plot_line_filtered <- ggplot(df, aes(x = Index, y = Value)) +
+  geom_point() +
+  geom_line(linetype = "dotted", color = "darkgrey") + 
+  geom_hline(yintercept = time_sample_s, linetype="dotted", color="red") +
+#  geom_hline(yintercept = time_sample_upper_s, linetype="dotted", color="red") +
+  geom_hline(yintercept = time_sample_threshold_s, linetype="dashed", color="red") +
+#  ggtitle("Line Plot of Data") +
+  xlab("Index") +
+  ylab("Zeitdifferenz [s]")
+
+# plot: Boxplot
+df <- data.frame(Value = diffs_filter2)
+
+results_a4_plot_box_filtered <- ggplot(df, aes(y = Value)) +
+  geom_boxplot() +
+# #  ggtitle("Boxplot of Data") +
+  ylab("Zeitdifferenz [s]")
+
+results_a4_plot_line
+results_a4_plot_box
+results_a4_plot_line_filtered
+results_a4_plot_box_filtered
+```
 
 ## Geolocation
 - Quelle Karte : https://www.geo.lu.ch/meta?metauid=UP10FARB_DS
@@ -315,6 +690,27 @@ terra::points(gps_points, col = "red", pch = 16, cex = 1.5)
 
 
 
+# Post Actions
+## Save Plots
+```{r}
+ggsave("export/nodes_temperatures.png", plot = results_plots_nodes_values, width = 10, height = 5, dpi = 600)
+#
+ggsave("export/results_e542_plot_line.png", plot = results_e542_plot_line, width = 6.2, height = 5, dpi = 600)
+ggsave("export/results_e542_plot_box.png", plot = results_e542_plot_box, width = 3.8, height = 5, dpi = 600)
+#
+ggsave("export/results_b200_plot_line.png", plot = results_b200_plot_line, width = 6.2, height = 5, dpi = 600)
+ggsave("export/results_b200_plot_box.png", plot = results_b200_plot_box, width = 3.8, height = 5, dpi = 600)
+#
+ggsave("export/results_f3xx_plot_line.png", plot = results_f3xx_plot_line, width = 6.2, height = 5, dpi = 600)
+ggsave("export/results_f3xx_plot_box.png", plot = results_f3xx_plot_box, width = 3.8, height = 5, dpi = 600)
+ggsave("export/results_f3xx_plot_line_filtered.png", plot = results_f3xx_plot_line_filtered, width = 6.2, height = 5, dpi = 600)
+ggsave("export/results_f3xx_plot_box_filtered.png", plot = results_f3xx_plot_box_filtered, width = 3.8, height = 5, dpi = 600)
+#
+ggsave("export/results_a4_plot_line.png", plot = results_a4_plot_line, width = 6.2, height = 5, dpi = 600)
+ggsave("export/results_a4_plot_box.png", plot = results_a4_plot_box, width = 3.8, height = 5, dpi = 600)
+ggsave("export/results_a4_plot_line_filtered.png", plot = results_a4_plot_line_filtered, width = 6.2, height = 5, dpi = 600)
+ggsave("export/results_a4_plot_box_filtered.png", plot = results_a4_plot_box_filtered, width = 3.8, height = 5, dpi = 600)
+```
 
 
 
