@@ -84,6 +84,7 @@ def time_sync():
     # implement
     return
 
+# toddo : use scheduler
 def radio_read(serial_object: serial.Serial):
     try:
         received_stream = rc232.radio.radio_receive(serial_object)
@@ -104,7 +105,7 @@ def radio_read(serial_object: serial.Serial):
     # fix : use received stream, package split could remove rssi value (;)
     # bug (?) : value maybe lesser than in RcTools (compare to explicit function with cmd 'S')
     for package in received_packages[-1:]:
-        # last elementl
+        # last element
         if len(package) > 3:
             continue
         char = package
@@ -112,6 +113,7 @@ def radio_read(serial_object: serial.Serial):
             char = char.replace('LF', '')
         try:
             # last character (rssi) to int
+            # todo : don't write converted value to database
             signal_strength_int = ord(char[-1])
         except:
             signal_strength_int = None

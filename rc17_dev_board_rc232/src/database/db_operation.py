@@ -6,11 +6,13 @@ SQL_CREATE_SENSORNODES_INFO_TABLE = """ CREATE TABLE IF NOT EXISTS sensornodes_i
                                     time_unix_s integer NOT NULL,
                                     node_id integer NOT NULL,
                                     pico_id integer NOT NULL,
+                                    firmware_version integer NOT NULL,
                                     radio_id integer
                                 ); """
                                 
 SQL_CREATE_GATEWAYNODE_TABLE = """ CREATE TABLE IF NOT EXISTS gatewaynode (
                                     id integer PRIMARY KEY,
+                                    software_version integer NOT NULL,
                                     radio_id integer                                    
                                 ); """
                

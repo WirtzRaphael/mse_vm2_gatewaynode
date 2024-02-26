@@ -1,6 +1,6 @@
 import sys
-import mode_gateway_pc
-import mode_performance_testing
+import apps.mode_gateway_pc
+import apps.mode_performance_testing
 
 # param
 #OPERATION_MODE = sys.argv[1] # gateway_pc, gateway_pi4, performance_testing 

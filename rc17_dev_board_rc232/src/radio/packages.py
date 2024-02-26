@@ -78,7 +78,7 @@ def _payload_readout_temperature(payload_list, payload_index_start_temperature) 
     for x in range(payload_index_start_temperature + PAYLOAD_INDEX_SENSOR_TEMPERATURE, len(payload_list), payload_index_start_temperature + PAYLOAD_LENGTH_TEMPERATURE):
         try:
             #print("payload_list 0: ", payload_list[x])
-            #print("payload_list 1: ", payload_list[x+1])
+            #print("payload_list 1: ", payload_list[x+1] )
             payload.add_payload_temperature(payload_list[x], payload_list[x+1], payload_list[x+2])
         except IndexError:
             # index out of bounds, corruptPAYLOAD_SEPARATOR = '-' or incomplete values
