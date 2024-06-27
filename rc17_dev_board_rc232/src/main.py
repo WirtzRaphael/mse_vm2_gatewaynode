@@ -22,7 +22,7 @@ if __name__ == "__main__":
             case 'gateway_pc':
                 apps.mode_gateway_pc.run_mode_gateway_pc(OPERATION_MODE, SERIAL_PORT_RC_DEVBOARD)
             case 'gateway_pc_v2':
-                apps.mode_gateway_pc_v2.run_mode_gateway_pc_v2(OPERATION_MODE, SERIAL_PORT_RC_DEVBOARD, True)
+                apps.mode_gateway_pc_v2.run_mode_gateway_pc_v2(OPERATION_MODE, SERIAL_PORT_RC_DEVBOARD, False)
             case 'gateway_pi4':
                 print("MODE: raspberry pi \n")
                 run_mode_gateway_pi4()
