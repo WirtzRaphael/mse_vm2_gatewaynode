@@ -164,3 +164,30 @@ def insert_temperatures_into_database(db_connection:database.sqlite.DbConnection
                                                         sensorTemperature.temperature, 
                                                         signal_strength))
     return None
+
+def insert_temperatures_testdata_into_database(db_connection:database.sqlite.DbConnection):
+    database.db_operation.insert_temperature_into_measurements(connection = db_connection, measurements = (10, 1234567890, 1, 25.0))
+    database.db_operation.insert_temperature_into_measurements(connection = db_connection, measurements = (10, 1234567895, 1, 24.5))
+    database.db_operation.insert_temperature_into_measurements(connection = db_connection, measurements = (10, 1234567900, 1, 24.0))
+    database.db_operation.insert_temperature_into_measurements(connection = db_connection, measurements = (10, 1234567905, 1, 24.5))
+    return None
+
+@repeat(every(2.5).seconds)
+def plot_measurements():
+    with database.sqlite.DbConnection(DB_FILEPATH) as db_connection:
+        # insert into database
+        plot_measurements = database.db_operation.read_temperature_from_measurements(connection = db_connection, node_id = 10, limit = 10)
+        print("Plot measurements: ", plot_measurements)
+        modi_current_time = (
+            p9.ggplot(
+                modis_order_df,
+                p9.aes(
+                    xmin="time_start",
+                    xmax="time_end",
+                    ymin=0,
+                    ymax="current_total",
+                    fill="Highlight",
+                ),
+            )
+        )
+    return None
