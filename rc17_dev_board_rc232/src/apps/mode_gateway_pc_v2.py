@@ -9,6 +9,8 @@ import schedule
 from schedule import every, repeat
 import os
 import re
+import pandas as pd
+from sqlalchemy import create_engine
 import plotnine as p9
 import yahdlc
 import serial
@@ -16,7 +18,7 @@ import timeutil.timer
 import time
 
 DB_FILEPATH = r"gateway_v2.db"
-
+sqlengine = create_engine(f'sqlite:///{DB_FILEPATH}', echo=False)
 
 """ Initialzation
 """
