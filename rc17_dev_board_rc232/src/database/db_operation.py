@@ -25,8 +25,8 @@ SQL_CREATE_SENSORNODES_MEASUREMENTS_TABLE = """ CREATE TABLE IF NOT EXISTS senso
 
 def insert_temperature_into_measurements(connection, measurements):
     try:
-        sql = ''' INSERT INTO sensornodes_measurements(node_id, time_unix_s, sensortype, sensor_value
-        VALUES(?,?,?) '''
+        sql = ''' INSERT INTO sensornodes_measurements(node_id, time_unix_s, sensortype, sensor_value)
+        VALUES(?,?,?,?) '''
         cursor = connection.cursor()
         cursor.execute(sql, measurements)
         
@@ -35,4 +35,22 @@ def insert_temperature_into_measurements(connection, measurements):
         return cursor.lastrowid
     
     except Error as e:
+        print(f"Error: {e}")
+        return None
+
+def read_temperature_from_measurements(connection, node_id, limit):
+    try:
+        cursor = connection.cursor()
+        cursor.execute("SELECT * FROM sensornodes_measurements WHERE node_id=?", (node_id,))
+        #cursor.execute("SELECT * FROM sensornodes_measurements WHERE node_id=? LIMIT ?", (node_id, limit))
+        
+        rows = cursor.fetchall()
+        
+        for row in rows:
+            print(row)
+
+        return rows
+        
+    except Error as e:
+        print(f"Error: {e}")
         return None
