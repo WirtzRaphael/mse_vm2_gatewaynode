@@ -11,7 +11,7 @@ import serial
 import timeutil.timer
 import time
 
-DB_FILEPATH = r"gateway.db"
+DB_FILEPATH = r"gateway_v2.db"
 
 
 """ Initialzation
