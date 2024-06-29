@@ -7,6 +7,10 @@ import rc232.serial
 import rc232.radio
 import schedule 
 from schedule import every, repeat
+import os
+import re
+import plotnine as p9
+import yahdlc
 import serial
 import timeutil.timer
 import time
@@ -54,20 +58,23 @@ def run_mode_gateway_pc_v2(operation_mode, rc_usb_port:serial, rc_usb_used:bool)
     else:  
         print("No serial port")
     init_db(DB_FILEPATH)
+    #with(database.sqlite.DbConnection(DB_FILEPATH)) as db_connection:
+    #    insert_temperatures_testdata_into_database
     
     # scheduling
     #self.timer_repeated = timeutil.timer.RepeatedTimer(1,radio_read, serial_rc) # auto-starts
     #schedule.every(1).seconds.do(radio_read, serial_rc) # sometimes conflict with serial port
     #schedule.every().day.at("00:00").do(time_sync)
     
-    while(operation_mode == 'gateway_pc'):
-        time.sleep(1)
-        radio_read(serial_rc)
+    while(operation_mode == 'gateway_pc_v2'):
+        plot_measurements()
         #schedule.run_pending()
+        time.sleep(1)
+        #radio_read(serial_rc)
         
 
     print("EXIT pc mode")
-    deinit_serial(self.serial_rc)
+    #deinit_serial(self.serial_rc)
     #self.timer_repeated.stop()
     
     #radio_read(self.serial_rc)
@@ -86,7 +93,7 @@ def time_sync():
     return
 
 # todo : in progress
-@repeat(every(5).seconds)
+#@repeat(every(5).seconds)
 def radio_read(serial_object: serial.Serial):
     """ Read received serial data
     """
@@ -145,10 +152,8 @@ def radio_read_file():
     except Exception as e:
         print(f"Radio read file error: {e}")
 
-def insert_temperatures_into_database(db_connection:database.sqlite.DbConnection, payload:radio.packages.ProtocolPayloadTemperature, signal_strength:int):
-    # todo : fix sql injection
+def insert_temperatures_into_database(db_connection:database.sqlite.DbConnection):
     print("db  operation")
-    #if payload.sensor_nr != None:
     for sensorTemperature in payload.sensorTemperatureValues:
         # todo : limit unix time after coma
         time_received_unix_s = timeutil.timeutil.get_time_unix_s()
