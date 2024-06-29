@@ -12,6 +12,7 @@ import re
 import pandas as pd
 from sqlalchemy import create_engine
 import plotnine as p9
+import matplotlib.pyplot as plt
 import yahdlc
 import serial
 import timeutil.timer
@@ -181,20 +182,44 @@ def insert_temperatures_testdata_into_database(db_connection:database.sqlite.DbC
 
 @repeat(every(2.5).seconds)
 def plot_measurements():
+    # todo : remove
     with database.sqlite.DbConnection(DB_FILEPATH) as db_connection:
-        # insert into database
-        plot_measurements = database.db_operation.read_temperature_from_measurements(connection = db_connection, node_id = 10, limit = 10)
-        print("Plot measurements: ", plot_measurements)
-        modi_current_time = (
-            p9.ggplot(
-                modis_order_df,
-                p9.aes(
-                    xmin="time_start",
-                    xmax="time_end",
-                    ymin=0,
-                    ymax="current_total",
-                    fill="Highlight",
-                ),
-            )
-        )
+        measurements_temperature = database.db_operation.read_temperature_from_measurements(connection = db_connection, node_id = 10, limit = 10)
+        print("Measurements temperature: ", measurements_temperature)
+
+    # test data
+    measurements_temperature = {
+        'time_unix_s': [1609459200, 1609462800, 1609466400, 1609470000],
+        'sensor_value': [23.5, 24.0, 22.8, 23.1],
+        'node_id': [10, 10, 10, 10]
+    }
+
+    measurements_temperature_df = pd.DataFrame(measurements_temperature)
+
+    #measurements_temperature_df = database.db_operation.read_temperature_df_from_measurements(engine = sqlengine, node_id = 10, limit = 10)
+    print(measurements_temperature_df.head())
+    # convert unix time to datetime
+    measurements_temperature_df['time'] = pd.to_datetime(measurements_temperature_df['time_unix_s'], unit='s')
+
+    plot_temperature = (
+    p9.ggplot(
+        measurements_temperature_df,
+        p9.aes(
+            x="time",
+            y="sensor_value",
+            color="factor(node_id)"  # Optional: add color by node_id
+        ),
+    )
+    + p9.geom_line(linetype="dashed")
+    + p9.geom_point()
+    + p9.labs(
+        title="Temperature Measurements",
+        x="Time",
+        y="Temperature (°C)",
+        color="Node ID"
+    )
+    + p9.theme_minimal()
+)
+    plot_temperature.show()
+    
     return None
