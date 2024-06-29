@@ -35,13 +35,11 @@ def init_db(db_file):
     with database.sqlite.DbConnection(db_file) as db_connection:
         if db_connection is not None:
             database.sqlite.create_table(connection = db_connection,
-                                        create_table_sql = database.db_operation.SQL_CREATE_GATEWAYNODE_TABLE)
-            database.sqlite.create_table(connection = db_connection,
-                                        create_table_sql = database.db_operation.SQL_CREATE_SENSORNODES_INFO_TABLE)
+                                        create_table_sql = database.db_operation.SQL_CREATE_SENSORNODES_TABLE)
             database.sqlite.create_table(connection = db_connection,
                                         create_table_sql = database.db_operation.SQL_CREATE_SENSORNODES_SENSORS_TABLE)
             database.sqlite.create_table(connection = db_connection,
-                                        create_table_sql = database.db_operation.SQL_CREATE_SENSORNODES_SENSORS_DATA_TABLE)
+                                        create_table_sql = database.db_operation.SQL_CREATE_SENSORNODES_MEASUREMENTS_TABLE)
     return None
 
 """ Functions
