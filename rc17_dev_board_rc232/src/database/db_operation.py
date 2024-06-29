@@ -1,19 +1,13 @@
 import sqlite3
 from sqlite3 import Error
 
-SQL_CREATE_SENSORNODES_INFO_TABLE = """ CREATE TABLE IF NOT EXISTS sensornodes_info (
+SQL_CREATE_SENSORNODES_TABLE = """ CREATE TABLE IF NOT EXISTS sensornodes_info (
                                     id integer PRIMARY KEY,
                                     time_unix_s integer NOT NULL,
                                     node_id integer NOT NULL,
                                     pico_id integer NOT NULL,
                                     firmware_version integer NOT NULL,
                                     radio_id integer
-                                ); """
-                                
-SQL_CREATE_GATEWAYNODE_TABLE = """ CREATE TABLE IF NOT EXISTS gatewaynode (
-                                    id integer PRIMARY KEY,
-                                    software_version integer NOT NULL,
-                                    radio_id integer                                    
                                 ); """
                
 SQL_CREATE_SENSORNODES_SENSORS_TABLE = """ CREATE TABLE IF NOT EXISTS sensornodes_sensors (
@@ -22,13 +16,10 @@ SQL_CREATE_SENSORNODES_SENSORS_TABLE = """ CREATE TABLE IF NOT EXISTS sensornode
                                     sensor_id integer
                                 ); """
                                 
-SQL_CREATE_SENSORNODES_SENSORS_DATA_TABLE = """ CREATE TABLE IF NOT EXISTS sensornodes_sensor_data (
+SQL_CREATE_SENSORNODES_MEASUREMENTS_TABLE = """ CREATE TABLE IF NOT EXISTS sensornodes_sensor_data (
                                     id integer PRIMARY KEY,
-                                    time_receive_unix_s integer NOT NULL,
-                                    time_rtc_s integer NOT NULL,
-                                    measure_nr integer NOT NULL,
-                                    sensornode_id integer NOT NULL,
-                                    sensor_id integer NOT NULL,
+                                    time_unix_s integer NOT NULL,
+                                    sensortype integer NOT NULL,
                                     sensor_value real NOT NULL,
                                     signal_strength integer
                                 ); """

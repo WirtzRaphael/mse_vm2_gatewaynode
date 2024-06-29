@@ -41,7 +41,7 @@ def init_db(db_file):
             database.sqlite.create_table(connection = db_connection,
                                         create_table_sql = database.db_operation.SQL_CREATE_SENSORNODES_SENSORS_TABLE)
             database.sqlite.create_table(connection = db_connection,
-                                        create_table_sql = database.db_operation.SQL_CREATE_SENSORNODES_SENSORS_DATA_TABLE)
+                                        create_table_sql = database.db_operation.SQL_CREATE_SENSORNODES_MEASUREMENTS_TABLE)
     return None
 
 """ Functions
