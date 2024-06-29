@@ -85,54 +85,26 @@ def time_sync():
     # implement
     return
 
-# todo : use scheduler
+# todo : in progress
+@repeat(every(5).seconds)
 def radio_read(serial_object: serial.Serial):
+    """ Read received serial data
+    """
     try:
-        received_stream = rc232.radio.radio_receive(serial_object)
-        received_packages = radio.packages.split_into_packages(received_stream)
-        if received_packages == None:
-            return None
+        # receive stream
+        # frames
+        # packages
         pass
     except serial.SerialException as e:
         print(f"Serial communication error: {e}")
         
-    received_payloads = list()
-    for package in received_packages: 
-        payload = radio.packages.payload_readout(package)
-        received_payloads.append(payload)
+    # payload data
     
-    signal_strength_int = 0
     # RSSI - signal strength
-    # fix : use received stream, package split could remove rssi value (;)
-    # bug (?) : value maybe lesser than in RcTools (compare to explicit function with cmd 'S')
-    for package in received_packages[-1:]:
-        # last element
-        if len(package) > 3:
-            continue
-        char = package
-        if 'LF' in char:
-            char = char.replace('LF', '')
-        try:
-            # last character (rssi) to int
-            # todo : don't write converted value to database
-            signal_strength_int = ord(char[-1])
-        except:
-            signal_strength_int = None
-
+   
     with database.sqlite.DbConnection(DB_FILEPATH) as db_connection:
-        for received_payload in received_payloads:
-            if received_payload == None:
-                continue     
-            match received_payload:
-                case radio.packages.ProtocolPayloadTemperature():
-                    print("payload temperature")
-                    insert_temperatures_into_database(db_connection, received_payload, signal_strength_int)
-                case radio.packages.ProtocolPayloadStatus():
-                    print("payloadsignal_strengthstatus")
-                case _:
-                    print("payload unknown")
-                    continue
-    return None
+        # insert into database
+        return None
 
 # todo : in progress
 def radio_read_file():
