@@ -62,20 +62,11 @@ def read_temperature_from_measurements(connection, node_id, limit):
 """
 def read_temperature_df_from_measurements(engine, node_id, limit):
     try:
-        #con = sqlite3.connect(connection)
-
         query = f'''
         SELECT * FROM sensornodes_measurements
         WHERE node_id={node_id}
         LIMIT {limit} 
         '''
-        #df = pd.read_sql_query("SELECT * FROM sensornodes_measurements WHERE node_id=?", (node_id,))
-        
-        #print(df.head())
-
-        #con.close()
-
-        #return df
 
         return pd.read_sql(query, engine)
         
