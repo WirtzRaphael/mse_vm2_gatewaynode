@@ -134,6 +134,45 @@ def radio_read(serial_object: serial.Serial):
                     continue
     return None
 
+# todo : in progress
+def radio_read_file():
+    """Read received serial data from file
+    """
+    try:
+        # todo : remove
+        current_path = os.getcwd()
+        print("Current working directory:", current_path)
+        #
+        filepath = "rc17_dev_board_rc232/examples/serial_packages_one_package.txt"
+        with open(filepath, "r") as file:
+            received_data = file.read()
+        
+        # convert hex to binary
+        received_stream = bytes.fromhex(received_data)
+        if not isinstance (received_stream, bytes):
+            raise TypeError("Received data is not bytes")
+
+        # HDLC frame delimiter is typically 0x7E
+        FRAME_DELIMITER = b'\x7e'
+        # Split data into frames using the delimiter
+        frames = re.findall(FRAME_DELIMITER, received_stream)
+        # Remove empty frames
+        frames = [frame for frame in frames if frame != '']           
+        print(f"Frames : {frames}")
+
+        for frame in frames:
+            # parse with yahdlc
+            data, ftype, seq_no = yahdlc.get_data(frame)
+            print(f"Data : {data}, Frame type : {ftype}, Sequence number : {seq_no}")
+        #data, ftype, seq_no = get_data(ser.read(ser.in_waiting))
+
+        #received_stream = rc232.radio.radio_receive_file("rc17_dev_board_rc232/examples/received_serial_one_package_hex.txt")
+        #received_packages = radio.packages.split_into_packages(received_stream)
+        print("Radio read complete")
+
+    except Exception as e:
+        print(f"Radio read file error: {e}")
+
 def insert_temperatures_into_database(db_connection:database.sqlite.DbConnection, payload:radio.packages.ProtocolPayloadTemperature, signal_strength:int):
     # todo : fix sql injection
     print("db  operation")
