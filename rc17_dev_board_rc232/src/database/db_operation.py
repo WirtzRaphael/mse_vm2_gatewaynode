@@ -1,4 +1,5 @@
 import sqlite3
+import pandas as pd
 from sqlite3 import Error
 
 SQL_CREATE_SENSORNODES_TABLE = """ CREATE TABLE IF NOT EXISTS sensornodes_info (
@@ -38,6 +39,8 @@ def insert_temperature_into_measurements(connection, measurements):
         print(f"Error: {e}")
         return None
 
+""" Read temperatures from measurements
+"""
 def read_temperature_from_measurements(connection, node_id, limit):
     try:
         cursor = connection.cursor()
@@ -50,6 +53,31 @@ def read_temperature_from_measurements(connection, node_id, limit):
             print(row)
 
         return rows
+        
+    except Error as e:
+        print(f"Error: {e}")
+        return None
+
+""" Read temperatures from measurements as a pandas dataframe
+"""
+def read_temperature_df_from_measurements(engine, node_id, limit):
+    try:
+        #con = sqlite3.connect(connection)
+
+        query = f'''
+        SELECT * FROM sensornodes_measurements
+        WHERE node_id={node_id}
+        LIMIT {limit} 
+        '''
+        #df = pd.read_sql_query("SELECT * FROM sensornodes_measurements WHERE node_id=?", (node_id,))
+        
+        #print(df.head())
+
+        #con.close()
+
+        #return df
+
+        return pd.read_sql(query, engine)
         
     except Error as e:
         print(f"Error: {e}")
