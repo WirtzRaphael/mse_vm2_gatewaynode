@@ -12,10 +12,27 @@ import re
 import pandas as pd
 from sqlalchemy import create_engine
 import plotnine as p9
-import yahdlc
 import serial
 import timeutil.timer
 import time
+from sys import exit as sys_exit
+from sys import stderr
+from time import sleep
+from yahdlc import (
+    FRAME_ACK,
+    FRAME_DATA,
+    FRAME_NACK,
+    FCSError,
+    MessageError,
+    frame_data,
+    get_data,
+)
+
+
+# todo : duplication
+SERIAL_PORT = '/dev/ttyUSB0'
+SERIAL_BAUDRATE = 19200
+SERIAL_TIMEOUT = 0
 
 DB_FILEPATH = r"gateway_v2.db"
 sqlengine = create_engine(f'sqlite:///{DB_FILEPATH}', echo=False)
@@ -25,6 +42,8 @@ sqlengine = create_engine(f'sqlite:///{DB_FILEPATH}', echo=False)
 def init_serial(serial_port: str, baud_rate: int = 19200, timeout: int = 1):
     serial_object = rc232.serial.serial_init(serial_port, baud_rate, timeout)
     try:
+        if(serial_object.isOpen()):
+            serial_object.close()
         serial_object.open()
     except serial.SerialException as e:
         print(f"Serial communication error: {e}")
@@ -66,13 +85,14 @@ def run_mode_gateway_pc_v2(operation_mode, rc_usb_port:serial, rc_usb_used:bool)
     # scheduling
     #self.timer_repeated = timeutil.timer.RepeatedTimer(1,radio_read, serial_rc) # auto-starts
     #schedule.every(1).seconds.do(radio_read, serial_rc) # sometimes conflict with serial port
+    schedule.every(1).seconds.do(radio_read_hdlc()) # sometimes conflict with serial port
     #schedule.every().day.at("00:00").do(time_sync)
     
     while(operation_mode == 'gateway_pc_v2'):
-        plot_measurements()
-        #schedule.run_pending()
-        time.sleep(1)
+        schedule.run_pending()
         #radio_read(serial_rc)
+        #plot_measurements()
+        time.sleep(1)
         
 
     print("EXIT pc mode")
@@ -81,25 +101,75 @@ def run_mode_gateway_pc_v2(operation_mode, rc_usb_port:serial, rc_usb_used:bool)
     
     #radio_read(self.serial_rc)
     return
-    
-@repeat(every(20).seconds, message = "write")
-@repeat(every(100).seconds, message = "check")
-def database_operation(message):
-    print("Database: ", message, "\n")
-    # implement
-    return
 
-def time_sync():
-    print("time_sync \n")
-    # implement
-    return
+def radio_read_hdlc():
+    try:
+        with serial.Serial(SERIAL_PORT, SERIAL_BAUDRATE, timeout=SERIAL_TIMEOUT) as ser:
+            # -------------------------------------------------- #
+            # Wait for HDLC frame
+            # -------------------------------------------------- #
+            print("[*] Waiting for data...")
+
+            while True:
+                try:
+                    # 200 µs
+                    sleep(200 / 1000000.0)
+                    data, ftype, seq_no = get_data(ser.read(ser.in_waiting))
+                    break
+                except MessageError:
+                    # No HDLC frame detected.
+                    pass
+                except FCSError:
+                    stderr.write("[x] Bad FCS\n")
+
+                    print("[*] Sending NACK...")
+                    ser.write(frame_data("", FRAME_NACK, 0))
+                    sys_exit(0)
+                except KeyboardInterrupt:
+                    print("[*] Bye!")
+                    sys_exit(0)
+
+            # -------------------------------------------------- #
+            # Handle HDLC frame received
+            # -------------------------------------------------- #
+            FRAME_ERROR = False
+
+            if ftype != FRAME_DATA:
+                stderr.write(f"[x] Bad frame type: {ftype}\n")
+                FRAME_ERROR = True
+            else:
+                print("[*] Data frame received")
+
+            if seq_no != 0:
+                stderr.write(f"[x] Bad sequence number: {seq_no}\n")
+                FRAME_ERROR = True
+            else:
+                print("[*] Sequence number OK")
+
+            if FRAME_ERROR is False:
+                print("[*] Sending ACK ...")
+                ser.write(frame_data("", FRAME_ACK, 1))
+            else:
+                print("[*] Sending NACK ...")
+                ser.write(frame_data("", FRAME_NACK, 0))
+    except serial.SerialException as err:
+        sys_exit(f"[x] Serial connection problem: {err}")
 
 # todo : in progress
-#@repeat(every(5).seconds)
+# todo : buffer size
 def radio_read(serial_object: serial.Serial):
     """ Read received serial data
     """
     try:
+        #received_buffer = rc232.radio.radio_receive_binary(serial_object)
+        received_byte_stream = serial_object.read(256)
+        # if empty
+        if received_byte_stream == b'':
+            print("Byte string is empty.")
+            # todo : dont stop program
+            return
+        data, ftype, seq_no = yahdlc.get_data(received_byte_stream)
+        print(f"Data : {data}, Frame type : {ftype}, Sequence number : {seq_no}")
         # receive stream
         # frames
         # packages
@@ -179,7 +249,7 @@ def insert_temperatures_testdata_into_database(db_connection:database.sqlite.DbC
     database.db_operation.insert_temperature_into_measurements(connection = db_connection, measurements = (10, 1234567905, 1, 24.5))
     return None
 
-@repeat(every(2.5).seconds)
+#@repeat(every(5).seconds)
 def plot_measurements():
     # test data
     #measurements_temperature = {
