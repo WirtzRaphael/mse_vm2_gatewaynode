@@ -14,13 +14,14 @@ import timeutil.timer
 from sys import exit as sys_exit
 from sys import stderr
 import time
-
+import visualize.plot_database
 
 # todo : duplication
 SERIAL_PORT = '/dev/ttyUSB0'
 SERIAL_BAUDRATE = 19200
 SERIAL_TIMEOUT = 0
 
+# todo : duplication
 DB_FILEPATH = r"gateway_v2.db"
 
 """ Initialization serial
@@ -127,10 +128,11 @@ def run_mode_gateway_pc_v2(operation_mode, rc_usb_port:serial, rc_usb_used:bool)
             # todo : get from frame
             sensortype = 1
 
-            database.db_operation.insert_temperature_into_measurements(DB_FILEPATH, measurements = (10, 1234567890, 1, 25.0))
-            for temperature in temperatures:
+            dbfilepath = r"gateway_v2.db"
+            for i, temperature in enumerate(temperatures):
                 if temperature:
-                    insert_temperatures_into_database(DB_FILEPATH,
+                    time_received_unix_s = time_received_unix_s - 5*i
+                    insert_temperatures_into_database(dbfilepath,
                                                       node_id,
                                                       time_received_unix_s,
                                                       sensortype,
@@ -142,7 +144,8 @@ def run_mode_gateway_pc_v2(operation_mode, rc_usb_port:serial, rc_usb_used:bool)
             print(f"An error occurred: {e}")
 
         # PLOT
-        #plot_measurements()
+        print("Plot")
+        visualize.plot_database.plot_measurements()
         time.sleep(1)
         
 
@@ -155,27 +158,20 @@ def run_mode_gateway_pc_v2(operation_mode, rc_usb_port:serial, rc_usb_used:bool)
 
 
 # todo : for v2
-def insert_temperatures_into_database(db_connection:database.sqlite.DbConnection):
-    print("db  operation")
-    for sensorTemperature in payload.sensorTemperatureValues:
-        # todo : limit unix time after coma
-        time_received_unix_s = timeutil.timeutil.get_time_unix_s()
-        sensor_timestamp_rtc = payload.timestampRtc + sensorTemperature.time_relative_to_reference
-        sensor_id = payload.sensor_nr
-        database.db_operation.insert_temperature_into_sensor_data(connection = db_connection,
-                                                    sensor_data = (
-                                                        time_received_unix_s,
-                                                        sensor_timestamp_rtc,
-                                                        sensorTemperature.temperatureId,
-                                                        10,
-                                                        sensor_id,
-                                                        sensorTemperature.temperature, 
-                                                        signal_strength))
+def insert_temperatures_into_database(dbfilepath, node_id, time_unix, sensortype, temperature):
+    measurements = (
+        node_id,
+        time_unix,
+        sensortype,
+        temperature)
+    with database.sqlite.DbConnection(dbfilepath) as db_connection:
+        database.db_operation.insert_temperature_into_measurements(connection = db_connection, measurements = measurements)
     return None
 
-def insert_temperatures_testdata_into_database(db_connection:database.sqlite.DbConnection):
-    database.db_operation.insert_temperature_into_measurements(connection = db_connection, measurements = (10, 1234567890, 1, 25.0))
-    database.db_operation.insert_temperature_into_measurements(connection = db_connection, measurements = (10, 1234567895, 1, 24.5))
-    database.db_operation.insert_temperature_into_measurements(connection = db_connection, measurements = (10, 1234567900, 1, 24.0))
-    database.db_operation.insert_temperature_into_measurements(connection = db_connection, measurements = (10, 1234567905, 1, 24.5))
+def insert_temperatures_testdata_into_database(dbfilepath):
+    with database.sqlite.DbConnection(dbfilepath) as db_connection:
+        database.db_operation.insert_temperature_into_measurements(connection = db_connection, measurements = (10, 1234567890, 1, 25.0))
+        database.db_operation.insert_temperature_into_measurements(connection = db_connection, measurements = (10, 1234567895, 1, 24.5))
+        database.db_operation.insert_temperature_into_measurements(connection = db_connection, measurements = (10, 1234567900, 1, 24.0))
+        database.db_operation.insert_temperature_into_measurements(connection = db_connection, measurements = (10, 1234567905, 1, 24.5))
     return None
