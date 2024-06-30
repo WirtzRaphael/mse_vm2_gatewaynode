@@ -1,7 +1,15 @@
+from yahdlc import (
+    FRAME_ACK,
+    FRAME_DATA,
+    FRAME_NACK,
+    FCSError,
+    MessageError,
+    frame_data,
+    get_data,
+)
+from sys import stderr
 
-
-
-def hdlc_decode(data):
+def hdlc_decode_bytes(data):
     frames = []
     frame = []
     escape = False
@@ -23,5 +31,4 @@ def hdlc_decode(data):
                 byte ^= 0x20
                 escape = False
             frame.append(byte)
-
     return frames

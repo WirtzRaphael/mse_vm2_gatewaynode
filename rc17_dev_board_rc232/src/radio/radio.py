@@ -10,28 +10,43 @@ DB_FILEPATH = r"gateway_v2.db"
 # todo : in progress
 # todo : buffer size
 # todo : TEST
+#todo: refactor bytearray one var
 def radio_read(serial_object: serial.Serial):
     """ Read received serial data
     """
     try:
-        #received_buffer = rc232.radio.radio_receive_binary(serial_object)
-        received_byte_stream = serial_object.read(256)
-        # if empty
-        if received_byte_stream == b'':
-            print("Byte string is empty.")
-            # todo : dont stop program
-            return
-        # receive stream
-        # frames
-        # packages
-        pass
-    except serial.SerialException as e:
-        print(f"Serial communication error: {e}")
-        
-    # payload data
-    
+        data = None
+        data_byte = bytearray()
+
+        with serial_object as ser:
+            duration = 6  # Duration to read data in seconds
+            start_time = time.time()
+            while (time.time() - start_time) < duration:
+                if ser.in_waiting > 0:
+                    data = ser.read(ser.in_waiting)
+                    data_byte.extend(data)
+                    print(f"Received data: {data}")
+                    print(f"Received data (hex): {data.hex()}")
+                    print(f"Received data (byte): {data_byte}")
+                time.sleep(0.1)  # Small delay to avoid busy-waiting
+    except Exception as e:
+        print(f"An error occurred: {e}")
+    finally:
+        if ser.is_open:
+            ser.close()
+
+    if data is not None:
+        return data
+    else :
+        return None
+
+    #received_byte_stream = serial_object.read(256)
+    # if empty
+    #if received_byte_stream == b'':
+    #    print("Byte string is empty.")
+    #    # todo : dont stop program
+    #    return
     # RSSI - signal strength
-    return received_byte_stream
 
 
 """" Receive data and write to file

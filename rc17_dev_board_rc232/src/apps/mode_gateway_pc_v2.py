@@ -81,20 +81,31 @@ def run_mode_gateway_pc_v2(operation_mode, rc_usb_port:serial, rc_usb_used:bool)
     while(operation_mode == 'gateway_pc_v2'):
         #schedule.run_pending()
 
-        # todo : error handling
+        # todo : error handling, no data
         #radio.radio.radio_receive_write_to_file(serial_rc)
         # RECEIVE
-        binary_data = radio.radio.read_received_data_from_file()
+        #binary_data = radio.radio.read_received_data_from_file()
+        try :
+            data_hex = radio.radio.radio_read(serial_rc)
 
-        # FRAMES
-        hdlc_frames = hdlc.hdlc.hdlc_decode(binary_data)
+            if data_hex is None:
+                continue
 
-        for i, frame in enumerate(hdlc_frames):
-            print(f"Frame {i + 1}: {frame.hex()}")
-        
-        # DECODE
-        for frame in enumerate(hdlc_frames):
-            radio.radio.frame_get_payload(frame)
+            # FRAMES
+            hdlc_frames = hdlc.hdlc.hdlc_decode_bytes(data_hex)
+
+            for i, frame in enumerate(hdlc_frames):
+                print(f"Frame {i + 1}: {frame.hex()}")
+
+            # DECODE
+            for frame_decoded in enumerate(hdlc_frames):
+                radio.radio.frame_get_payload(frame_decoded)
+            
+            # Content
+            print("Content")
+
+        except Exception as e:
+            print(f"An error occurred: {e}")
 
         #radio_read_hdlc()
         #radio_read(serial_rc)
