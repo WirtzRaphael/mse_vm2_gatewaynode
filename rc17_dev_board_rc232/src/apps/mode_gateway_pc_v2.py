@@ -86,29 +86,60 @@ def run_mode_gateway_pc_v2(operation_mode, rc_usb_port:serial, rc_usb_used:bool)
         # RECEIVE
         #binary_data = radio.radio.read_received_data_from_file()
         try :
-            data_hex = radio.radio.radio_read(serial_rc)
+            # READ
+            print("Read data")
+            data_bytearray = radio.radio.radio_read(serial_rc)
 
-            if data_hex is None:
+            if data_bytearray is None:
                 continue
 
+            #radio.radio.radio_write_bytearray_to_file(data_bytearray)
+            radio.radio.radio_append_bytearray_to_file(data_bytearray)
+
             # FRAMES
-            hdlc_frames = hdlc.hdlc.hdlc_decode_bytes(data_hex)
+            print("Frames")
+            hdlc_frames = hdlc.hdlc.hdlc_decode_bytes(data_bytearray)
 
             for i, frame in enumerate(hdlc_frames):
-                print(f"Frame {i + 1}: {frame.hex()}")
+                print(f"Frame (bytearra) {i + 1}: {frame}")
+                print(f"Frame (hex) {i + 1}: {frame.hex()}")
 
             # DECODE
-            for frame_decoded in enumerate(hdlc_frames):
-                radio.radio.frame_get_payload(frame_decoded)
+            print("Decode")
+            for i, frame in enumerate(hdlc_frames):
+                #payload = radio.radio.frame_get_payload(frame.hex())
+                payload = radio.radio.frame_get_payload(frame)
+                print(f"Payload: {payload.hex()}")
+                temperatures = radio.radio.get_temperature_values_degree(payload)
+                # todo : remove last two bytes
+                print(f"Temperatures: {temperatures}")
+
+
+            #for frame in enumerate(hdlc_frames):
+            #    radio.radio.frame_get_payload(frame)
             
             # Content
             print("Content")
+            # todo : get from frame
+            time_received_unix_s = timeutil.timeutil.get_time_unix_s()
+            # todo : get from frame
+            node_id = 10
+            # todo : get from frame
+            sensortype = 1
+
+            database.db_operation.insert_temperature_into_measurements(DB_FILEPATH, measurements = (10, 1234567890, 1, 25.0))
+            for temperature in temperatures:
+                if temperature:
+                    insert_temperatures_into_database(DB_FILEPATH,
+                                                      node_id,
+                                                      time_received_unix_s,
+                                                      sensortype,
+                                                      temperature)
+                else:
+                    continue
 
         except Exception as e:
             print(f"An error occurred: {e}")
-
-        #radio_read_hdlc()
-        #radio_read(serial_rc)
 
         # PLOT
         #plot_measurements()

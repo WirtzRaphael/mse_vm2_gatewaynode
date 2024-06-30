@@ -9,7 +9,7 @@ from yahdlc import (
 )
 from sys import stderr
 
-def hdlc_decode_bytes(data):
+def hdlc_decode_bytes(data:bytearray):
     frames = []
     frame = []
     escape = False
