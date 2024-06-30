@@ -11,6 +11,7 @@ from schedule import every, repeat
 #import re
 import serial
 import timeutil.timer
+from datetime import datetime
 from sys import exit as sys_exit
 from sys import stderr
 import time
@@ -112,8 +113,12 @@ def run_mode_gateway_pc_v2(operation_mode, rc_usb_port:serial, rc_usb_used:bool)
                 payload = radio.radio.frame_get_payload(frame)
                 print(f"Payload: {payload.hex()}")
                 temperatures = radio.radio.get_temperature_values_degree(payload)
+                time_node_unix = radio.radio.get_temperature_time_unix(payload)
+
                 # todo : remove last two bytes
                 print(f"Temperatures: {temperatures}")
+                print(f"Time node unix: {time_node_unix}")
+                print(datetime.fromtimestamp(time_node_unix).strftime('%Y-%m-%d %H:%M:%S'))
 
 
             #for frame in enumerate(hdlc_frames):
@@ -121,20 +126,23 @@ def run_mode_gateway_pc_v2(operation_mode, rc_usb_port:serial, rc_usb_used:bool)
             
             # Content
             print("Content")
-            # todo : get from frame
-            time_received_unix_s = timeutil.timeutil.get_time_unix_s()
+            # todo : time sync/diff with node
+            #time_received_unix_s = timeutil.timeutil.get_time_unix_s()
+
             # todo : get from frame
             node_id = 10
             # todo : get from frame
             sensortype = 1
 
+            print("Database")
             dbfilepath = r"gateway_v2.db"
             for i, temperature in enumerate(temperatures):
                 if temperature:
-                    time_received_unix_s = time_received_unix_s - 5*i
+                    #time_received_unix_s = time_received_unix_s - 5*i
                     insert_temperatures_into_database(dbfilepath,
                                                       node_id,
-                                                      time_received_unix_s,
+                                                      #time_received_unix_s,
+                                                      time_node_unix[i],
                                                       sensortype,
                                                       temperature)
                 else:

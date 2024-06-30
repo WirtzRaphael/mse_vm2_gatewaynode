@@ -154,11 +154,15 @@ def frame_get_payload(frame:bytearray):
 
     return payload
 
+def get_temperature_time_unix(payload):
+    time_unix_bytes = payload[0:4]
+    time_unix = int.from_bytes(time_unix_bytes, byteorder='little', signed=False)
+    return time_unix
+
 def get_temperature_values_degree(payload):
-    # todo : time
     temperature_values_degree = []
 
-    for i in range(0, len(payload), 2):
+    for i in range(4, len(payload), 2):
         # pass two bytes
         temperature_dec = temperature_convert_byte_to_dec(payload[i:i+2])
         temperature_degree = temperature_convert_dec_to_degree(temperature_dec)
