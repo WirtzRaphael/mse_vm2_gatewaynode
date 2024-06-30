@@ -85,12 +85,22 @@ def run_mode_gateway_pc_v2(operation_mode, rc_usb_port:serial, rc_usb_used:bool)
     # scheduling
     #self.timer_repeated = timeutil.timer.RepeatedTimer(1,radio_read, serial_rc) # auto-starts
     #schedule.every(1).seconds.do(radio_read, serial_rc) # sometimes conflict with serial port
-    schedule.every(1).seconds.do(radio_read_hdlc()) # sometimes conflict with serial port
+    #schedule.every(1).seconds.do(radio_read_hdlc()) # sometimes conflict with serial port
     #schedule.every().day.at("00:00").do(time_sync)
     
     while(operation_mode == 'gateway_pc_v2'):
-        schedule.run_pending()
+        #schedule.run_pending()
+
+        # todo : error handling
+        binary_data = read_received_data_from_file()
+        hdlc_frames = hdlc_decode(binary_data)
+
+        for i, frame in enumerate(hdlc_frames):
+            print(f"Frame {i + 1}: {frame.hex()}")
+
+        #radio_read_hdlc()
         #radio_read(serial_rc)
+
         #plot_measurements()
         time.sleep(1)
         
@@ -101,6 +111,32 @@ def run_mode_gateway_pc_v2(operation_mode, rc_usb_port:serial, rc_usb_used:bool)
     
     #radio_read(self.serial_rc)
     return
+
+# todo : move file
+def hdlc_decode(data):
+    frames = []
+    frame = []
+    escape = False
+    in_frame = False
+
+    for byte in data:
+        if byte == 0x7E:  # Flag sequence
+            if in_frame and frame:
+                frames.append(bytes(frame))
+                frame = []
+            in_frame = not in_frame
+            continue
+
+        if in_frame:
+            if byte == 0x7D:  # Escape character
+                escape = True
+                continue
+            if escape:
+                byte ^= 0x20
+                escape = False
+            frame.append(byte)
+
+    return frames
 
 def radio_receive_write_to_file():
     try:
@@ -161,7 +197,8 @@ def radio_read_hdlc():
                 try:
                     # 200 µs
                     sleep(200 / 1000000.0)
-                    data, ftype, seq_no = get_data(ser.read(ser.in_waiting))
+                    received_data = ser.read(ser.in_waiting)
+                    data, ftype, seq_no = get_data(received_data)
                     break
                 except MessageError:
                     # No HDLC frame detected.
@@ -232,6 +269,8 @@ def radio_read(serial_object: serial.Serial):
         # insert into database
         return None
 
+
+# todo : delete
 # todo : in progress
 def radio_read_file():
     """Read received serial data from file
