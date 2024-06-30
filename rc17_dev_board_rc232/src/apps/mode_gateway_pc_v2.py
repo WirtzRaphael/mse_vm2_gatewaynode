@@ -102,6 +102,26 @@ def run_mode_gateway_pc_v2(operation_mode, rc_usb_port:serial, rc_usb_used:bool)
     #radio_read(self.serial_rc)
     return
 
+def radio_receive_write_to_file():
+    try:
+        with serial.Serial(SERIAL_PORT, SERIAL_BAUDRATE, timeout=SERIAL_TIMEOUT) as ser:
+            output_file = 'serial_data.bin'
+            duration = 60  # Duration to read data in seconds
+            start_time = time.time()
+            with open(output_file, 'wb') as f:
+                print(f"Saving data to: {output_file}")
+                while (time.time() - start_time) < duration:
+                    if ser.in_waiting > 0:
+                        data = ser.read(ser.in_waiting)
+                        f.write(data)
+                        print(f"Received data: {data}")
+                    time.sleep(0.1)  # Small delay to avoid busy-waiting
+    except Exception as e:
+        print(f"An error occurred: {e}")
+    finally:
+        if ser.is_open:
+            ser.close()
+
 def radio_read_hdlc():
     try:
         with serial.Serial(SERIAL_PORT, SERIAL_BAUDRATE, timeout=SERIAL_TIMEOUT) as ser:
