@@ -85,16 +85,21 @@ def run_mode_gateway_pc_v2(operation_mode, rc_usb_port:serial, rc_usb_used:bool)
         #radio.radio.radio_receive_write_to_file(serial_rc)
         # RECEIVE
         binary_data = radio.radio.read_received_data_from_file()
+
+        # FRAMES
         hdlc_frames = hdlc.hdlc.hdlc_decode(binary_data)
 
         for i, frame in enumerate(hdlc_frames):
             print(f"Frame {i + 1}: {frame.hex()}")
-            
+        
         # DECODE
+        for frame in enumerate(hdlc_frames):
+            radio.radio.frame_get_payload(frame)
 
         #radio_read_hdlc()
         #radio_read(serial_rc)
 
+        # PLOT
         #plot_measurements()
         time.sleep(1)
         
