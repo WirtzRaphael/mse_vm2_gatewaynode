@@ -35,7 +35,7 @@ def init_serial(serial_port: str, baud_rate: int = 19200, timeout: int = 1):
         print(f"Serial communication error: {e}")
     return serial_object
 
-""" DEinitialization serial
+""" Deinitialization serial
 """
 def deinit_serial(serial_object: serial.Serial):
     try:
