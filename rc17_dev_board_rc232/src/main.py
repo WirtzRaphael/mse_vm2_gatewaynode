@@ -19,17 +19,12 @@ def run_mode_gateway_pi4():
 if __name__ == "__main__":
     while(True):
         match OPERATION_MODE:
-            case 'gateway_pc':
-                apps.mode_gateway_pc.run_mode_gateway_pc(OPERATION_MODE, SERIAL_PORT_RC_DEVBOARD)
             case 'gateway_pc_v2':
-                apps.mode_gateway_pc_v2.run_mode_gateway_pc_v2(OPERATION_MODE, SERIAL_PORT_RC_DEVBOARD, False)
+                apps.mode_gateway_pc_v2.run_mode_gateway_pc_v2(OPERATION_MODE, SERIAL_PORT_RC_DEVBOARD, True)
             case 'gateway_pi4':
                 print("MODE: raspberry pi \n")
                 run_mode_gateway_pi4()
                 # todo : v2 pc receive
-            case 'performance_testing':
-                print("MODE: performance testing \n")
-                apps.mode_performance_testing.run_mode_performance_testing()
             case _:
                 print("no mode\n")
 
