@@ -4,6 +4,9 @@ import serial
 import time
 import os
 
+
+DB_FILEPATH = r"gateway_v2.db"
+
 # todo : in progress
 # todo : buffer size
 # todo : TEST
@@ -18,7 +21,6 @@ def radio_read(serial_object: serial.Serial):
             print("Byte string is empty.")
             # todo : dont stop program
             return
-        print(f"Data : {data}, Frame type : {ftype}, Sequence number : {seq_no}")
         # receive stream
         # frames
         # packages
@@ -29,10 +31,7 @@ def radio_read(serial_object: serial.Serial):
     # payload data
     
     # RSSI - signal strength
-   
-    with database.sqlite.DbConnection(DB_FILEPATH) as db_connection:
-        # insert into database
-        return None
+    return received_byte_stream
 
 
 """" Receive data and write to file
@@ -88,4 +87,27 @@ def read_binary_file(file_path):
     except Exception as e:
         print(f"An error occurred while reading the file: {e}")
         return None
+    
+def frame_get_payload(frame):
+    # todo : check length try catch
+
+    # 1 byte : data info field
+    data_info = frame[0]
+    # 3 bit : version
+    data_info_version = data_info >> 5
+    # 5 bit : content
+    data_info_content = data_info & 0b00011111
+
+    # 1 byte : node address
+    address_node = frame[1]
+
+    # n byte : data
+    data = frame[2:-1]
+    print(f"Data info: {data_info}")
+    print(f"Data info version: {data_info_version}")
+    print(f"Data info content: {data_info_content}")
+    print(f"Node address: {address_node}")
+    print(f"Data: {data}")
+
+    pass
 
