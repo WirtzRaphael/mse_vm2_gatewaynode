@@ -109,7 +109,6 @@ def run_mode_gateway_pc_v2(operation_mode, rc_usb_port:serial, rc_usb_used:bool)
             # DECODE
             print("Decode")
             for i, frame in enumerate(hdlc_frames):
-                #payload = radio.radio.frame_get_payload(frame.hex())
                 payload = radio.radio.frame_get_payload(frame)
                 print(f"Payload: {payload.hex()}")
                 temperatures = radio.radio.get_temperature_values_degree(payload)
@@ -128,6 +127,7 @@ def run_mode_gateway_pc_v2(operation_mode, rc_usb_port:serial, rc_usb_used:bool)
             print("Content")
             # todo : time sync/diff with node
             #time_received_unix_s = timeutil.timeutil.get_time_unix_s()
+            measurement_time_unix = time_node_unix
 
             # todo : get from frame
             node_id = 10
@@ -138,11 +138,12 @@ def run_mode_gateway_pc_v2(operation_mode, rc_usb_port:serial, rc_usb_used:bool)
             dbfilepath = r"gateway_v2.db"
             for i, temperature in enumerate(temperatures):
                 if temperature:
+                    measurement_time_unix = measurement_time_unix - 5
                     #time_received_unix_s = time_received_unix_s - 5*i
                     insert_temperatures_into_database(dbfilepath,
                                                       node_id,
                                                       #time_received_unix_s,
-                                                      time_node_unix[i],
+                                                      measurement_time_unix,
                                                       sensortype,
                                                       temperature)
                 else:
