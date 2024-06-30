@@ -122,6 +122,33 @@ def radio_receive_write_to_file():
         if ser.is_open:
             ser.close()
 
+def read_binary_file(file_path):
+    try:
+        with open(file_path, 'rb') as f:
+            return f.read()
+    except Exception as e:
+        print(f"An error occurred while reading the file: {e}")
+        return None
+
+def read_received_data_from_file():
+    # todo : move
+    # Read the binary data
+
+    current_path = os.getcwd()
+    print("Current working directory:", current_path)
+
+    #filepath = "rc17_dev_board_rc232/examples/serial_packages_one_package.txt"
+    file_path = './rc17_dev_board_rc232/examples/serial_data.bin'
+    binary_data = read_binary_file(file_path)
+    #binary_data = read_binary_file(filepath)
+
+    if binary_data:
+        print("Binary data read successfully.")
+        return binary_data
+    else:
+        print("Failed to read binary data.")
+        raise Exception("Failed to read binary data.")
+
 def radio_read_hdlc():
     try:
         with serial.Serial(SERIAL_PORT, SERIAL_BAUDRATE, timeout=SERIAL_TIMEOUT) as ser:
