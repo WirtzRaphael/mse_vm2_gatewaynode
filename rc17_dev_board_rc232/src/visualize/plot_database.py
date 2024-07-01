@@ -4,6 +4,7 @@ from matplotlib import pyplot as plt
 import pandas as pd
 import database.db_operation
 from sqlalchemy import create_engine
+import pytz
 
 # todo : duplication
 DB_FILEPATH = r"gateway_v2.db"
@@ -23,34 +24,51 @@ def plot_measurements():
 
     # data from databas
     measurements_temperature_1_df = database.db_operation.read_temperature_df_from_measurements(engine = sqlengine, node_id = 10, sensortype = 1, limit = 25)
-    print(measurements_temperature_1_df.head())
     # convert unix time to datetime
+    timezone = pytz.timezone('Etc/GMT-2') 
     measurements_temperature_1_df['time'] = pd.to_datetime(measurements_temperature_1_df['time_unix_s'], unit='s', utc=True)
+    measurements_temperature_1_df['time'] = measurements_temperature_1_df['time'].dt.tz_convert(timezone)
+    print(measurements_temperature_1_df.head())
+    # 
+    min_time = measurements_temperature_1_df['time'].min().floor('30S')
+    max_time = measurements_temperature_1_df['time'].max().ceil('30S')
+
 
     if measurements_temperature_1_df.empty:
         print(f"No empty data frame found")
 
     plot_temperature = (
-    p9.ggplot(
-       measurements_temperature_1_df,
-       p9.aes(
-           x="time",
-           y="sensor_value",
-           color="factor(sensortype)"  # Optional: add color by node_id
-       ),
-    )
-    + p9.geom_line(linetype="dashed")
-    + p9.geom_point()
-    + p9.labs(
-       title="Temperature Measurements",
-       x="Time",
-       y="Temperature (°C)",
-       color="Sensor"
-    )
-    + p9.theme_minimal()
-    + p9.scale_y_continuous(limits = [10, 35], breaks=range(9, 36, 5))
-    + p9.scale_x_datetime(date_labels="%H:%M")
-    #+ p9.scale_x_datetime(breaks="1 hour", labels="%H:%M")
+        p9.ggplot(
+           measurements_temperature_1_df,
+           p9.aes(
+               x="time",
+               y="sensor_value",
+               color="factor(sensortype)"  # Optional: add color by node_id
+           ),
+        )
+        + p9.geom_line(linetype="none")
+        + p9.geom_point()
+        + p9.labs(
+           title="Temperature Measurements",
+           x="Time",
+           y="Temperature (°C)",
+           color="Sensor"
+        )
+        + p9.theme_minimal()
+        + p9.scale_y_continuous(limits = [20, 30], breaks=range(10, 31, 1))
+        + p9.scale_x_datetime(
+            date_labels="%H:%M:%S",
+            breaks=pd.date_range(
+                #start=measurements_temperature_1_df['time'].min()
+                #end=measurements_temperature_1_df['time'].max()
+                start=min_time,
+                end=max_time,
+                freq='30S'
+            )
+        )
+        + p9.theme(
+            axis_text_x=p9.element_text(angle=45, hjust=1)
+        )
     )
     # plt.ion()
     #plot_temperature.show()
