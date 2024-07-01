@@ -107,47 +107,59 @@ def run_mode_gateway_pc_v2(operation_mode, rc_usb_port:serial, rc_usb_used:bool)
                 print(f"Frame (hex) {i + 1}: {frame.hex()}")
 
             # DECODE
+
+            # fime: mulitple frames same time
+            date_now = datetime.now()
+            time_received_unix = datetime.timestamp(date_now)
+            time_measurement_s = time_received_unix
             print("Decode")
             for i, frame in enumerate(hdlc_frames):
-                payload = radio.radio.frame_get_payload(frame)
-                print(f"Payload: {payload.hex()}")
-                temperatures = radio.radio.get_temperature_values_degree(payload)
-                time_node_unix = radio.radio.get_temperature_time_unix(payload)
+                frame_address = radio.radio.frame_get_hdlc_address(frame)
+                print(f"Frame address: {frame_address}")
+                frame_control = radio.radio.frame_get_hdlc_control(frame)
+                print(f"Frame control: {frame_control}")
+                #
+                payload_version = radio.radio.frame_get_info_version(frame)
+                print(f"Payload version: {payload_version}")
+                #
+                payload_content = radio.radio.frame_get_info_content(frame)
+                payload = radio.radio.frame_get_data(frame)
+                print(f"Payload (hex): {payload.hex()}")
+                print(f"Payload (int): {int.from_bytes(payload, byteorder='little', signed=False)}")
+                #
+                # todo : remove last two bytes ?
+                match payload_content:
+                    case 2:
+                        # temperature 1
+                        print("temperature 1")
+                        temperatures = radio.radio.get_temperature_values_degree(payload)
+                        time_node_unix = radio.radio.get_temperature_time_unix(payload)
+                        print(f"Temperatures: {temperatures}")
+                        print(f"Time node unix: {time_node_unix}")
+                        print(datetime.fromtimestamp(time_node_unix).strftime('%Y-%m-%d %H:%M:%S'))
+                        # 
+                        print("Database")
+                        dbfilepath = r"gateway_v2.db"
+                        # todo : get from frame
+                        node_id = 10
+                        # todo : get from frame
+                        sensortype = 1
+                        # todo : time sync/diff with node
 
-                # todo : remove last two bytes
-                print(f"Temperatures: {temperatures}")
-                print(f"Time node unix: {time_node_unix}")
-                print(datetime.fromtimestamp(time_node_unix).strftime('%Y-%m-%d %H:%M:%S'))
-
-
-            #for frame in enumerate(hdlc_frames):
-            #    radio.radio.frame_get_payload(frame)
-            
-            # Content
-            print("Content")
-            # todo : time sync/diff with node
-            #time_received_unix_s = timeutil.timeutil.get_time_unix_s()
-            measurement_time_unix = time_node_unix
-
-            # todo : get from frame
-            node_id = 10
-            # todo : get from frame
-            sensortype = 1
-
-            print("Database")
-            dbfilepath = r"gateway_v2.db"
-            for i, temperature in enumerate(temperatures):
-                if temperature:
-                    measurement_time_unix = measurement_time_unix - 5
-                    #time_received_unix_s = time_received_unix_s - 5*i
-                    insert_temperatures_into_database(dbfilepath,
+                        for i, temperature in enumerate(temperatures):
+                            if temperature:
+                                time_measurement_s -= 5
+                                insert_temperatures_into_database(dbfilepath,
                                                       node_id,
                                                       #time_received_unix_s,
-                                                      measurement_time_unix,
+                                                      time_measurement_s,
                                                       sensortype,
                                                       temperature)
-                else:
-                    continue
+                    case 3:
+                        # temperature 2
+                        print("temperature 2")
+                    case _:
+                        print("Invalid frame content")
 
         except Exception as e:
             print(f"An error occurred: {e}")

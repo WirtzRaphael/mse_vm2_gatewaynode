@@ -124,59 +124,72 @@ def read_binary_file(file_path):
     except Exception as e:
         print(f"An error occurred while reading the file: {e}")
         return None
-    
-def frame_get_payload(frame:bytearray):
-    # todo : check length try catch
-    hdlc_address = frame[0]
-    hdlc_control = frame[1] 
 
+def frame_get_hdlc_address(frame:bytearray):
+    return frame[0]
+
+def frame_get_hdlc_control(frame:bytearray):
+    return frame[1]
+
+def _frame_get_data_info(frame:bytearray):
     # 1 byte : data info field
-    data_info = frame[2]
+    return frame[2]
+
+def frame_get_info_version(frame:bytearray):
+    data_info = _frame_get_data_info(frame)
     # 3 bit : version
-    data_info_version = data_info >> 5
-    # 5 bit : content
-    data_info_content = data_info & 0b00011111
-
-    # 1 byte : node address
-    address_node = frame[3]
-
-    # n byte : data
-    payload = frame[4:-1]
+    return (data_info >> 5)
     
-    print(f"HDLC address: {hdlc_address}")
-    print(f"HDLC control: {hdlc_control}")
-    #
-    print(f"Data info: {data_info}")
-    print(f"Data info version: {data_info_version}")
-    print(f"Data info content: {data_info_content}")
-    print(f"Node address: {address_node}")
+def frame_get_info_content(frame:bytearray):
+    data_info = _frame_get_data_info(frame)
+    # 5 bit : content
+    return data_info & 0b00011111
+
+def frame_get_node_address(frame:bytearray):
+    # 1 byte : node address
+    return frame[3]
+
+def frame_get_data(frame:bytearray):
+    # todo : check length try catch
+    # n byte : data
+    payload = frame[4:]
+    
+    # print(f"HDLC address: {hdlc_address}")
+    # print(f"HDLC control: {hdlc_control}")
+    # #
+    # print(f"Data info: {data_info}")
+    # print(f"Data info version: {data_info_version}")
+    # print(f"Data info content: {data_info_content}")
+    # print(f"Node address: {address_node}")
     print(f"Payload: {payload}")
 
     return payload
 
-def get_temperature_time_unix(payload):
+def get_temperature_time_unix(payload:bytearray):
     time_unix_bytes = payload[0:4]
     time_unix = int.from_bytes(time_unix_bytes, byteorder='little', signed=False)
     return time_unix
 
-def get_temperature_values_degree(payload):
+def get_temperature_values_degree(payload:bytearray):
     temperature_values_degree = []
+    temperatures = payload[4:]
 
-    for i in range(4, len(payload), 2):
+    for i in range(0, len(temperatures), 2):
         # pass two bytes
-        temperature_dec = temperature_convert_byte_to_dec(payload[i:i+2])
+        temperature_bytes = payload[i:i+2]
+        if len(temperature_bytes) != 2:
+            print("Invalid byte array length.")
+            continue
+        temperature_dec = int.from_bytes(temperature_bytes, byteorder='little', signed=False)
         temperature_degree = temperature_convert_dec_to_degree(temperature_dec)
-        temperature_values_degree.append(temperature_degree)
-
+        if temperature_degree is not None:
+            temperature_values_degree.append(temperature_degree)
+            continue
+        else:
+            print("Invalid temperature value.")
+            continue
     return temperature_values_degree
 
-
-def temperature_convert_byte_to_dec(temperature:bytearray):
-    if len(temperature) != 2:
-        print("Invalid byte array length.")
-        return
-    
-    return (temperature[0]) | temperature[1] << 8
 
 def temperature_convert_dec_to_degree(temperature:int):
     # avoid type conflict
@@ -184,3 +197,5 @@ def temperature_convert_dec_to_degree(temperature:int):
         return None
     if (temperature >= temperature_min_degree * 100):
         return temperature / 100
+    else:
+        return None
