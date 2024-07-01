@@ -35,7 +35,8 @@ def plot_measurements():
 
 
     if measurements_temperature_1_df.empty:
-        print(f"No empty data frame found")
+        print(f"Empty data frame")
+        return
 
     plot_temperature = (
         p9.ggplot(
