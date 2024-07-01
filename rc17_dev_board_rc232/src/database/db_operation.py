@@ -27,14 +27,14 @@ SQL_CREATE_SENSORNODES_MEASUREMENTS_TABLE = """ CREATE TABLE IF NOT EXISTS senso
                                     sensor_value real NOT NULL
                                 ); """
 
-def insert_temperature_into_measurements(connection, measurements):
+def insert_temperature_into_measurements(connection, measurement):
     try:
         #connection = sqlite3.connect(DB_FILEPATH)
 
         sql = ''' INSERT INTO sensornodes_measurements(node_id, time_unix_s, sensortype, sensor_value)
         VALUES(?,?,?,?) '''
         cursor = connection.cursor()
-        cursor.execute(sql, measurements)
+        cursor.execute(sql, measurement)
         
         connection.commit()
         
