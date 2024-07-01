@@ -1,5 +1,6 @@
 import sqlite3
 import pandas as pd
+from sqlalchemy import create_engine, text
 from sqlite3 import Error
 
 DB_FILEPATH = r"gateway_v2.db"
@@ -64,17 +65,20 @@ def read_temperature_from_measurements(connection, node_id, limit):
 
 """ Read temperatures from measurements as a pandas dataframe
 """
-def read_temperature_df_from_measurements(engine, node_id, limit):
+def read_temperature_df_from_measurements(engine, node_id, sensortype, limit):
     try:
-        query = f'''
+        query = text('''
         SELECT *
         FROM sensornodes_measurements
-        WHERE node_id={node_id}
+        WHERE node_id=:node_id AND sensortype=:sensortype
         ORDER BY time_unix_s DESC
-        LIMIT {limit} 
-        '''
+        LIMIT :limit
+        ''') 
 
-        return pd.read_sql(query, engine)
+        with engine.connect() as connection:
+            df = pd.read_sql_query(query, connection, params={'node_id': node_id, 'sensortype': sensortype, 'limit': limit})
+
+        return df
         
     except Error as e:
         print(f"Error: {e}")
