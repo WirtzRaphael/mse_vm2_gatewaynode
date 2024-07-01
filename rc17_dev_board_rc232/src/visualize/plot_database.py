@@ -19,23 +19,24 @@ def plot_measurements():
     #}
     #measurements_temperature_df = pd.DataFrame(measurements_temperature)
 
-    # data from database
-    measurements_temperature_df = database.db_operation.read_temperature_df_from_measurements(engine = sqlengine, node_id = 10, limit = 50)
-    print(measurements_temperature_df.head())
+    # todo : sensor 2
+
+    # data from databas
+    measurements_temperature_1_df = database.db_operation.read_temperature_df_from_measurements(engine = sqlengine, node_id = 10, sensortype = 1, limit = 25)
+    print(measurements_temperature_1_df.head())
     # convert unix time to datetime
-    measurements_temperature_df['time'] = pd.to_datetime(measurements_temperature_df['time_unix_s'], unit='s')
+    measurements_temperature_1_df['time'] = pd.to_datetime(measurements_temperature_1_df['time_unix_s'], unit='s', utc=True)
 
-    if measurements_temperature_df.empty:
+    if measurements_temperature_1_df.empty:
         print(f"No empty data frame found")
-
 
     plot_temperature = (
     p9.ggplot(
-       measurements_temperature_df,
+       measurements_temperature_1_df,
        p9.aes(
            x="time",
            y="sensor_value",
-           color="factor(node_id)"  # Optional: add color by node_id
+           color="factor(sensortype)"  # Optional: add color by node_id
        ),
     )
     + p9.geom_line(linetype="dashed")
@@ -44,10 +45,10 @@ def plot_measurements():
        title="Temperature Measurements",
        x="Time",
        y="Temperature (°C)",
-       color="Node ID"
+       color="Sensor"
     )
     + p9.theme_minimal()
-    + p9.scale_y_continuous(limits = [0, 40], breaks=range(0, 41, 5))
+    + p9.scale_y_continuous(limits = [10, 35], breaks=range(9, 36, 5))
     + p9.scale_x_datetime(date_labels="%H:%M")
     #+ p9.scale_x_datetime(breaks="1 hour", labels="%H:%M")
     )
