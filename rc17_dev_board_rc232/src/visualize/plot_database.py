@@ -11,7 +11,28 @@ DB_FILEPATH = r"gateway_v2.db"
 
 sqlengine = create_engine(f'sqlite:///{DB_FILEPATH}', echo=False)
 
-def plot_measurements():
+
+def _get_df_temperature_1():
+    # data from database
+    measurements_temperature_1_df = database.db_operation.read_temperature_df_from_measurements(engine = sqlengine, node_id = 10, sensortype = 1, limit = 25)
+    # convert unix time to datetime
+    timezone = pytz.timezone('Etc/GMT-2') 
+    measurements_temperature_1_df['time'] = pd.to_datetime(measurements_temperature_1_df['time_unix_s'], unit='s', utc=True)
+    measurements_temperature_1_df['time'] = measurements_temperature_1_df['time'].dt.tz_convert(timezone)
+    print(measurements_temperature_1_df.head())
+    return measurements_temperature_1_df
+
+def _get_df_temperature_2():
+    # data from database
+    measurements_temperature_2_df = database.db_operation.read_temperature_df_from_measurements(engine = sqlengine, node_id = 10, sensortype = 2, limit = 25)
+    # convert unix time to datetime
+    timezone = pytz.timezone('Etc/GMT-2') 
+    measurements_temperature_2_df['time'] = pd.to_datetime(measurements_temperature_2_df['time_unix_s'], unit='s', utc=True)
+    measurements_temperature_2_df['time'] = measurements_temperature_2_df['time'].dt.tz_convert(timezone)
+    print(measurements_temperature_2_df.head())
+    return measurements_temperature_2_df
+
+def _get_testdata():
     # test data
     #measurements_temperature = {
     #    'time_unix_s': [1609459200, 1609462800, 1609466400, 1609470000],
@@ -19,28 +40,29 @@ def plot_measurements():
     #    'node_id': [10, 10, 10, 10]
     #}
     #measurements_temperature_df = pd.DataFrame(measurements_temperature)
+    return None
 
-    # todo : sensor 2
+def plot_measurement_temperature():
+    temperature_1_df = _get_df_temperature_1()
+    temperature_2_df = _get_df_temperature_2()
+    #
+    measurements_temperature = pd.concat([temperature_1_df, temperature_2_df])
+    print(measurements_temperature.head())
+    #
+    _plot_df_measurement_temperature(measurements_temperature)
+    return None
 
-    # data from databas
-    measurements_temperature_1_df = database.db_operation.read_temperature_df_from_measurements(engine = sqlengine, node_id = 10, sensortype = 1, limit = 25)
-    # convert unix time to datetime
-    timezone = pytz.timezone('Etc/GMT-2') 
-    measurements_temperature_1_df['time'] = pd.to_datetime(measurements_temperature_1_df['time_unix_s'], unit='s', utc=True)
-    measurements_temperature_1_df['time'] = measurements_temperature_1_df['time'].dt.tz_convert(timezone)
-    print(measurements_temperature_1_df.head())
-    # 
-    min_time = measurements_temperature_1_df['time'].min().floor('30S')
-    max_time = measurements_temperature_1_df['time'].max().ceil('30S')
+def _plot_df_measurement_temperature(measurements_temperature:pd.DataFrame):
+    min_time = measurements_temperature['time'].min().floor('30S')
+    max_time = measurements_temperature['time'].max().ceil('30S')
 
-
-    if measurements_temperature_1_df.empty:
+    if measurements_temperature.empty:
         print(f"Empty data frame")
         return
 
     plot_temperature = (
         p9.ggplot(
-           measurements_temperature_1_df,
+           measurements_temperature,
            p9.aes(
                x="time",
                y="sensor_value",
@@ -56,7 +78,7 @@ def plot_measurements():
            color="Sensor"
         )
         + p9.theme_minimal()
-        + p9.scale_y_continuous(limits = [20, 30], breaks=range(10, 31, 1))
+        + p9.scale_y_continuous(limits = [20, 35], breaks=range(10, 36, 1))
         + p9.scale_x_datetime(
             date_labels="%H:%M:%S",
             breaks=pd.date_range(

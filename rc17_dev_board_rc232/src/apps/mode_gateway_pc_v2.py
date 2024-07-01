@@ -154,7 +154,7 @@ def run_mode_gateway_pc_v2(operation_mode, rc_usb_port:serial, rc_usb_used:bool)
 
         # PLOT
         print("=> Plot")
-        visualize.plot_database.plot_measurements()
+        visualize.plot_database.plot_measurement_temperature()
         time.sleep(1)
         
 
