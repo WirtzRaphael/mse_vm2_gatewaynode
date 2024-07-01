@@ -149,6 +149,8 @@ def run_mode_gateway_pc_v2(operation_mode, rc_usb_port:serial, rc_usb_used:bool)
                         for i, temperature in enumerate(temperatures):
                             if temperature:
                                 time_measurement_s -= 5
+                                print(" ==> Insert into database")
+                                print(f"Measurement : {time_measurement_s}, {temperature}")
                                 insert_temperatures_into_database(dbfilepath,
                                                       node_id,
                                                       #time_received_unix_s,
