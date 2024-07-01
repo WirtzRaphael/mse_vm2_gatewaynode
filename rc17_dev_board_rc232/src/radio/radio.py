@@ -150,9 +150,9 @@ def frame_get_node_address(frame:bytearray):
     return frame[3]
 
 def frame_get_data(frame:bytearray):
-    # todo : check length try catch
     # n byte : data
-    payload = frame[4:]
+    # without crc
+    payload = frame[4:-2]
     
     # print(f"HDLC address: {hdlc_address}")
     # print(f"HDLC control: {hdlc_control}")
@@ -173,15 +173,19 @@ def get_temperature_time_unix(payload:bytearray):
 def get_temperature_values_degree(payload:bytearray):
     temperature_values_degree = []
     temperatures = payload[4:]
-
+    print(f"Temperatures (hex): {temperatures.hex()}")
+    
     for i in range(0, len(temperatures), 2):
         # pass two bytes
-        temperature_bytes = payload[i:i+2]
+        temperature_bytes = temperatures[i:i+2]
+        print(f"Temperature bytes (hex): {temperature_bytes.hex()}")
         if len(temperature_bytes) != 2:
             print("Invalid byte array length.")
             continue
         temperature_dec = int.from_bytes(temperature_bytes, byteorder='little', signed=False)
         temperature_degree = temperature_convert_dec_to_degree(temperature_dec)
+        print(f"Temperature (dec): {temperature_dec}")
+        print(f"Temperature (degree): {temperature_degree}")
         if temperature_degree is not None:
             temperature_values_degree.append(temperature_degree)
             continue
