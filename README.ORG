@@ -1,31 +1,13 @@
-#+TITLE: MSE VM2 Gatewaynode
+#+TITLE: Gatewaynode
 :BUFFERSETTINGS:
 #+STARTUP: overview noinlineimages nologstatesreversed ident hidestars hideblocks
 :END:
 
 
 *Requirements*
-- InfluxDB
-- InfluxDB Python Libraries
 - Python 3.10 mininimum
     - ie. match requires python 3.10
 
-
-```
-python3 -m pip install influxdb
-```
-
-
-Add git hook for pre-commit
-```
-pre-commit install
-```
-
-*Services*
-- https://coveralls.io/repos
-
-*Naming Convention*
-- https://peps.python.org/pep-0008/#function-and-variable-names
 
 *Virtual Environment Python*
 - vscode create python environment
@@ -37,7 +19,8 @@ source ./.venv/bin/activate
 
 *Raspberry Pi*
 SSS Connection to raspberry pi
-requires an (empty) ssh file on the boot partition
+requires an (empty) ssh file on the boot partition.
+The default password is ~himb33re~
 ```
 ssh username@host(IP/Domaimn_name)
 ```
