@@ -4,7 +4,6 @@ import radio.packages
 import rc232.testing
 import rc232.config
 import rc232.serial
-import rc232.radio
 import schedule 
 from schedule import every, repeat
 import serial
