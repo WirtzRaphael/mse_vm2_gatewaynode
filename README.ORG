@@ -5,11 +5,13 @@
 
 
 *Requirements*
+
 - Python 3.10 mininimum
     - ie. match requires python 3.10
 
 
 *Virtual Environment Python*
+
 - vscode create python environment
 
 activate in console
@@ -18,7 +20,8 @@ source ./.venv/bin/activate
 ```
 
 *Raspberry Pi*
-SSS Connection to raspberry pi
+
+SSH Connection to raspberry pi
 requires an (empty) ssh file on the boot partition.
 The default password is ~himb33re~
 ```
@@ -31,5 +34,6 @@ sudo nmap -sn 192.168.1.0/24
 ``
 
 *IDE vscode*
+
 - SQLite Viewer
 - Python
